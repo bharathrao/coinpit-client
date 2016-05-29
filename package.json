@@ -1,0 +1,40 @@
+{
+  "name": "coinpit-client",
+  "version": "0.0.1",
+  "description": "clinet library for coinpit",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "mocha specs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bharathrao/coinpit-client.git"
+  },
+  "keywords": [
+    "coinpit",
+    "bitcoin",
+    "futures",
+    "simulator",
+    "client",
+    "bot",
+    "bots"
+  ],
+  "author": "coinpit",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bharathrao/coinpit-client/issues"
+  },
+  "homepage": "https://github.com/bharathrao/coinpit-client#readme",
+  "dependencies": {
+    "affirm.js": "^1.0.0",
+    "bluebird": "^3.4.0",
+    "loginless": "0.0.2",
+    "node-uuid": "^1.4.7"
+  },
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "fixtures.js": "^2.1.0",
+    "mocha": "^2.5.3",
+    "mocha-generators": "^1.2.0"
+  }
+}
