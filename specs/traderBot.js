@@ -1,6 +1,7 @@
 var bluebird = require('bluebird')
 
 bluebird.coroutine(function*(baseurl, privkey, throttleTime, bias) {
+  return
   process.env.COINPIT_URL = baseurl
   var cc = require('../src/index')(baseurl)
   var account = yield cc.getAccount(privkey)
@@ -134,7 +135,7 @@ bluebird.coroutine(function*(baseurl, privkey, throttleTime, bias) {
         continue
       }
       if (userOrders[side].search(price)[0]) continue
-      var newOrder = createOrder(price, quantity, side)
+      var newOrder = createOrders(price, quantity, side)
       //console.log("newOrder", order, newOrder)
       try {
         loginless.socket.send(io, [newOrder], "POST", "order-post")

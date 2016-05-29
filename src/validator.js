@@ -6,21 +6,27 @@ module.exports = function (instrument) {
   var validOrdersString = JSON.stringify(validOrdersTypes)
   var validOrderSide    = { buy: true, sell: true }
 
-  validator.validateCreateOrder = function (order) {
-    assertUserId(order)
-    assertOrderSide(order)
-    assertQuantity(order)
-    assertPrice(order)
-    assertOrderType(order)
-    assertClientId(order)
-    assertStopPrice(order)
-    assertTargetPrice(order)
+  validator.validateCreateOrder = function (orders) {
+    for (var i = 0; i < orders.length; i++) {
+      var order = orders[i];
+      assertUserId(order)
+      assertOrderSide(order)
+      assertQuantity(order)
+      assertPrice(order)
+      assertOrderType(order)
+      assertClientId(order)
+      assertStopPrice(order)
+      assertTargetPrice(order)
+    }
   }
 
-  validator.validateUpdateOrder = function (order, originalOrders) {
-    assert(originalOrders[order.uuid], 'No order found with uuid: ' + order.uuid, 422)
-    assert(originalOrders[order.uuid].price, 'Orders created with no price can not be modified. uuid: ' + order.uuid, 422)
-    validateNumber("price", order.price, instrument.ticksperpoint)
+  validator.validateUpdateOrder = function (orders, originalOrders) {
+    for (var i = 0; i < orders.length; i++) {
+      var order = orders[i];
+      assert(originalOrders[order.uuid], 'No order found with uuid: ' + order.uuid, 422)
+      assert(originalOrders[order.uuid].price, 'Orders created with no price can not be modified. uuid: ' + order.uuid, 422)
+      validateNumber("price", order.price, instrument.ticksperpoint)
+    }
   }
 
   function assertClientId(order) {
@@ -44,7 +50,7 @@ module.exports = function (instrument) {
   }
 
   function assertOrderType(order) {
-    assert(validOrdersTypes[order.orderType], order.orderType + " is not a valid order type. Valid orderTypes are " +validOrdersString)
+    assert(validOrdersTypes[order.orderType], order.orderType + " is not a valid order type. Valid orderTypes are " + validOrdersString)
   }
 
   function assertStopPrice(order) {

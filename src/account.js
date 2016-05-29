@@ -41,14 +41,14 @@ module.exports = function (serverResponse, loginless, socket) {
     return util.clone(openOrders)
   }
 
-  account.createOrder = function (order) {
-    validator.validateCreateOrder(order)
-    return promised({ orders: [order] }, "POST", "order-post")
+  account.createOrders = function (orders) {
+    validator.validateCreateOrder(orders)
+    return promised({ orders: orders }, "POST", "order-post")
   }
 
-  account.updateOrder = function (order) {
-    validator.validateUpdateOrder(order, orders)
-    return promised({ orders: [order] }, "PUT", "order-put")
+  account.updateOrders = function (orders) {
+    validator.validateUpdateOrder(orders, openOrders)
+    return promised({ orders: orders }, "PUT", "order-put")
   }
 
   account.cancelOrder = function (order) {
@@ -115,7 +115,7 @@ module.exports = function (serverResponse, loginless, socket) {
   function onOrderAdd(orders) {
     updateOrders(orders)
     var response = getCustomerResponse(orders)
-    respondSuccess(orders.requestid, response[0])
+    respondSuccess(orders.requestid, response)
   }
 
   function onOrderUpdate(orders) {
