@@ -135,10 +135,10 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   function onError(response) {
-    respondError(response.requestid, response.error.error)
+    respondError(response.requestid, response.error)
     if (!response.requestid) {
       //todo: this needs to be handled
-      handleError("Error on error", response.error.error)
+      handleError("Error on error", response.error)
     }
   }
 

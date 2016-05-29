@@ -18,6 +18,19 @@ describe('account test', function () {
     expect(Object.keys(account.getOpenOrders())).to.eql([test.result.uuid])
   })
 
+  it('fail createOrders', function*() {
+    var test      = fixtures.createOrdersFail
+    var loginless = Loginless(test.loginlessEvent, test.result)
+    var account   = Account(test.serverResponse, loginless, socket)
+    try {
+      yield account.createOrders(test.order)
+      expect().fail("Exception was expected, but was successful")
+    } catch (e) {
+      expect(e).to.be.eql(test.result.error)
+      expect(account.getOpenOrders()).to.be.empty()
+    }
+  })
+
   it('updateOrders', function*() {
     var test                            = fixtures.updateOrders
     var loginless                       = Loginless(test.loginlessEvent, [test.result])
