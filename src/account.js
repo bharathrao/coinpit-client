@@ -3,7 +3,8 @@ module.exports = function (serverResponse, loginless, socket) {
   var nodeUUID    = require('node-uuid')
   var util        = require('./util')
   var account     = {}
-  var openOrders = {}, positions, pnl, availableMargin, readonlyApp, ioconnected
+  account.openOrders = {}
+  var positions, pnl, availableMargin, readonlyApp, ioconnected
   var validator   = require("./validator")(serverResponse.instrument)
   var promises    = {}
   account.logging = false
@@ -38,7 +39,7 @@ module.exports = function (serverResponse, loginless, socket) {
   })
 
   account.getOpenOrders = function () {
-    return util.clone(openOrders)
+    return util.clone(account.openOrders)
   }
 
   account.createOrders = function (orders) {
@@ -47,7 +48,7 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   account.updateOrders = function (orders) {
-    validator.validateUpdateOrder(orders, openOrders)
+    validator.validateUpdateOrder(orders, account.openOrders)
     return promised({ orders: orders }, "PUT", "order-put")
   }
 
@@ -129,7 +130,7 @@ module.exports = function (serverResponse, loginless, socket) {
 
   function onFlat(response) {
     getUserDetails().then(function () {
-      respondSuccess(response.requestid, openOrders)
+      respondSuccess(response.requestid, account.openOrders)
     })
   }
 
@@ -169,7 +170,7 @@ module.exports = function (serverResponse, loginless, socket) {
   function updateOrders(orders) {
     for (var i = 0; i < orders.length; i++) {
       var order              = orders[i];
-      openOrders[order.uuid] = order
+      account.openOrders[order.uuid] = order
     }
   }
 
@@ -198,7 +199,7 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   function refreshWithUserDetails(userDetails) {
-    openOrders      = userDetails.orders
+    account.openOrders      = userDetails.orders
     positions       = userDetails.positions
     pnl             = userDetails.pnl
     availableMargin = userDetails.availableMargin

@@ -15,7 +15,7 @@
         "ticksperpoint": 10
       }
     },
-    "loginlessEvent":"order_add",
+    "loginlessEvent": "order_add",
     "result"        : {
       "uuid"       : "9d087536-eb01-11e5-a77a-7e7ae8165098",
       "userid"     : "n4QdGfLHAHASCu846fjBsNRBTkjRKdXP5Z",
@@ -23,6 +23,39 @@
       "side"       : "sell",
       "quantity"   : 1,
       "price"      : 416,
+      "orderType"  : "LMT",
+      "stopPrice"  : 0.5,
+      "targetPrice": 1
+    }
+  },
+  "updateOrders": {
+    "order"         : {
+      "userid"     : "n4QdGfLHAHASCu846fjBsNRBTkjRKdXP5Z",
+      "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
+      "side"       : "sell",
+      "quantity"   : 1,
+      "price"      : 416,
+      "orderType"  : "LMT",
+      "stopPrice"  : 0.5,
+      "targetPrice": 1
+    },
+    "serverResponse": {
+      "instrument": {
+        "ticksperpoint": 10
+      }
+    },
+    "change"        : {
+      "key": "price",
+      "value": 417
+    },
+    "loginlessEvent": "order_update",
+    "result"        : {
+      "uuid"       : "9d087536-eb01-11e5-a77a-7e7ae8165098",
+      "userid"     : "n4QdGfLHAHASCu846fjBsNRBTkjRKdXP5Z",
+      "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
+      "side"       : "sell",
+      "quantity"   : 1,
+      "price"      : 417,
       "orderType"  : "LMT",
       "stopPrice"  : 0.5,
       "targetPrice": 1
