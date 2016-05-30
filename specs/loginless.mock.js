@@ -1,10 +1,10 @@
-module.exports = function(event, result){
-  var loginless = {}
+module.exports = function (event, result) {
+  var loginless    = {}
   loginless.socket = {
-    ntp: function(){},
-    send: function(socket, body, method, uri){
-      result.requestid = body.requestid
-      socket.respond(event, result)
+    ntp : function () {
+    },
+    send: function (socket, method, headers, uri, body) {
+      socket.respond(event, { result: result, requestid: headers.requestid })
     }
   }
   return loginless

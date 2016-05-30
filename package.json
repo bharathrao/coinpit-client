@@ -28,7 +28,7 @@
   "dependencies": {
     "affirm.js": "^1.0.0",
     "bluebird": "^3.4.0",
-    "loginless": "0.0.2",
+    "loginless": "~0.0.2",
     "node-uuid": "^1.4.7",
     "rest.js": "0.0.5",
     "socket.io-client": "^1.4.6"

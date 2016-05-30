@@ -26,7 +26,7 @@ describe('account test', function () {
       yield account.createOrders(test.order)
       expect().fail("Exception was expected, but was successful")
     } catch (e) {
-      expect(e).to.be.eql(test.result.error)
+      expect(e).to.be.eql(test.result.message)
       expect(account.getOpenOrders()).to.be.empty()
     }
   })

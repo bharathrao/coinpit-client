@@ -44,20 +44,20 @@ module.exports = function (serverResponse, loginless, socket) {
 
   account.createOrders = function (orders) {
     validator.validateCreateOrder(orders)
-    return promised({ orders: orders }, "POST", "order-post")
+    return promised(orders, "POST", "/order")
   }
 
   account.updateOrders = function (orders) {
     validator.validateUpdateOrder(orders, account.openOrders)
-    return promised({ orders: orders }, "PUT", "order-put")
+    return promised([orders], "PUT", "/order")
   }
 
   account.cancelOrder = function (order) {
-    return promised({ uuid: order.uuid }, "DELETE", "order-del")
+    return promised([order.uuid], "DELETE", "/order")
   }
 
   account.flat = function () {
-    return promised({}, "DELETE", "orders-del")
+    return promised([], "DELETE", "/order")
   }
 
   account.transferToMargin = function () {
@@ -113,24 +113,23 @@ module.exports = function (serverResponse, loginless, socket) {
     loginless.socket.onAuthError(socket, message)
   }
 
-  function onOrderAdd(orders) {
-    updateOrders(orders)
-    var response = getCustomerResponse(orders)
-    respondSuccess(orders.requestid, response)
+  function onOrderAdd(response) {
+    updateOrders(response.result)
+    respondSuccess(response.requestid, util.clone(response.result))
   }
 
-  function onOrderUpdate(orders) {
-    onOrderAdd(orders)
+  function onOrderUpdate(response) {
+    onOrderAdd(response)
   }
 
   function onOrderDel(response) {
-    delete orders[response.uuid]
-    respondSuccess(response.requestid, response.uuid)
+    delete orders[response.result[0]]
+    respondSuccess(response.requestid, response.result[0])
   }
 
   function onFlat(response) {
     getUserDetails().then(function () {
-      respondSuccess(response.requestid, account.openOrders)
+      respondSuccess(response.requestid, util.clone(account.openOrders))
     })
   }
 
@@ -161,9 +160,9 @@ module.exports = function (serverResponse, loginless, socket) {
 
   function promised(body, method, uri) {
     return new bluebird(function (resolve, reject) {
-      body.requestid           = nodeUUID.v1()
-      promises[body.requestid] = { resolve: resolve, reject: reject, time: Date.now() }
-      loginless.socket.send(socket, body, method, uri)
+      var requestid           = nodeUUID.v1()
+      promises[requestid] = { resolve: resolve, reject: reject, time: Date.now() }
+      loginless.socket.send(socket, method, {requestid: requestid}, uri, body)
     })
   }
 
