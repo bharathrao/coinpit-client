@@ -56,27 +56,29 @@ module.exports = function (serverResponse, loginless, socket) {
     return promised([order.uuid], "DELETE", "/order")
   }
 
-  account.flat = function () {
+  account.closeAll = function () {
     return promised([], "DELETE", "/order")
   }
 
-  account.transferToMargin = function () {
+  account.transferToMargin = function (amountInBTC) {
     
   }
 
   account.balance = function () {
+    /*{
+          balance:multisig-balance + margin-balance + pnl,
+          availableMargin:userDetail.margin,
+          multisig :{confirmed, unconfirmed},
+          margin :{confirmed, unconfirmed}
+       }*/
 
   }
 
-  account.withdraw = function () {
+  account.withdraw = function (address, amount, commission) {
 
   }
 
   account.recoveryTx = function () {
-
-  }
-
-  account.closeAll = function () {
 
   }
 
