@@ -25,7 +25,7 @@ module.exports = function (instrument) {
       var order = orders[i];
       assert(originalOrders[order.uuid], 'No order found with uuid: ' + order.uuid, 422)
       assert(originalOrders[order.uuid].price, 'Orders created with no price can not be modified. uuid: ' + order.uuid, 422)
-      validateNumber("price", order.price, instrument.ticksperpoint)
+      validateIfNumberGreaterThanZero("price", order.price, instrument.ticksperpoint)
     }
   }
 
@@ -38,14 +38,14 @@ module.exports = function (instrument) {
   }
 
   function assertQuantity(order) {
-    validateNumber("quantity", order.quantity, 1)
+    validateIfNumberGreaterThanZero("quantity", order.quantity, 1)
   }
 
   function assertPrice(order) {
     if (order.orderType === 'MKT') {
       assert(order.price === undefined, ': MKT orders cannot specify price ' + order.price, 422)
     } else {
-      validateNumber("price", order.price, instrument.ticksperpoint)
+      validateIfNumberGreaterThanZero("price", order.price, instrument.ticksperpoint)
     }
   }
 
@@ -54,21 +54,32 @@ module.exports = function (instrument) {
   }
 
   function assertStopPrice(order) {
-    if (order.stopPrice !== undefined) validateNumber("stopPrice", order.stopPrice, instrument.ticksperpoint)
+    if (order.stopPrice !== undefined)
+      validateIfNumberGreaterThanZero("stopPrice", order.stopPrice, instrument.ticksperpoint)
   }
 
   function assertTargetPrice(order) {
-    if (order.targetPrice !== undefined) validateNumber("targetPrice", order.targetPrice, instrument.ticksperpoint)
+    if (order.targetPrice !== undefined)
+      validateIfNumberGreaterThanOrEqualToZero("targetPrice", order.targetPrice, instrument.ticksperpoint)
   }
 
   function assertUserId(order) {
     assert(order.userid, 'userid is missing')
   }
 
-  function validateNumber(name, value, multiplier) {
+  function validateIfNumberGreaterThanZero(name, value, multiplier) {
+    validateIfNumber(name, value, multiplier)
+    assert(value > 0, name + " " + value + " should be greater than 0", 422)
+  }
+
+  function validateIfNumberGreaterThanOrEqualToZero(name, value, multiplier) {
+    validateIfNumber(name, value, multiplier)
+    assert(value >= 0, name + " " + value + " should be atleast 0", 422)
+  }
+
+  function validateIfNumber(name, value, multiplier) {
     var type = typeof value
     assert(type === 'number', name + " " + value + " expecting number, found " + type, 422)
-    assert(value > 0, name + " " + value + " should be greater than 0", 422)
     var quantity = value * multiplier
     var multiple = 1 / multiplier
     assert(quantity % 1 === 0, name + " " + value + " is invalid. " + name + " should be multiple of " + multiple, 422)

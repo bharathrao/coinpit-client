@@ -13,9 +13,9 @@ describe('account test', function () {
     var test      = fixtures.createOrders
     var loginless = Loginless(test.loginlessEvent, [test.result])
     var account   = Account(test.serverResponse, loginless, socket)
-    var created   = yield account.createOrders(test.order)
+    var created   = yield account.createOrders([test.order])
     expect(created).to.eql([test.result])
-    expect(Object.keys(account.getOpenOrders())).to.eql([test.result.uuid])
+    expect(Object.keys(account.openOrders)).to.eql([test.result.uuid])
   })
 
   it('fail createOrders', function*() {
@@ -23,7 +23,7 @@ describe('account test', function () {
     var loginless = Loginless(test.loginlessEvent, test.result)
     var account   = Account(test.serverResponse, loginless, socket)
     try {
-      yield account.createOrders(test.order)
+      yield account.createOrders([test.order])
       expect().fail("Exception was expected, but was successful")
     } catch (e) {
       expect(e).to.be.eql(test.result.message)
@@ -40,7 +40,7 @@ describe('account test', function () {
     updated[test.change.key]            = test.change.value
     var created                         = yield account.updateOrders([updated])
     expect(created).to.eql([test.result])
-    expect(account.getOpenOrders()[test.result.uuid].price).to.eql(test.result.price)
+    expect(account.openOrders[test.result.uuid].price).to.eql(test.result.price)
   })
 
 })

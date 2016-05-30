@@ -84,8 +84,8 @@ describe("request validator", function () {
     expect(validateCreate).withArgs([order]).to.not.throwException()
     order.targetPrice = 12.1
     expect(validateCreate).withArgs([order]).to.not.throwException()
-    order.targetPrice = 0
-    expect(validateCreate).withArgs([order]).to.throwException(/should be greater than 0/)
+    order.targetPrice = -0.1
+    expect(validateCreate).withArgs([order]).to.throwException(/should be atleast 0/)
     order.targetPrice = 12.123
     expect(validateCreate).withArgs([order]).to.throwException(/is invalid. targetPrice should be multiple of/)
     order.targetPrice = "not a number"
