@@ -51,13 +51,17 @@ var mmbot = bluebird.coroutine(function* mmBot(baseurl, privateKey, side) {
     yield account.updateOrders([order])
   }
   
-  setInterval(bluebird.coroutine(function*(){
+  /*setInterval(bluebird.coroutine(function*(){
     try {
-      yield* marketMoved(mangler.numberBetween(500, 550))
+      yield* marketMoved(numberBetween(500, 550))
     } catch (e) {
       console.log(e)
     }
   }), 5000)
+
+  function numberBetween(start, end) {
+    return Math.round(Math.random() * (end - start)) + start
+  }*/
 })
 
 mmbot("http://localhost:9000", "cSP5d6rBPRaUBRjRgGtVghHAD6aCGgFAoXVjhUwRxNzqKECNwj4a", "buy")
