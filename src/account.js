@@ -4,6 +4,7 @@ module.exports = function (serverResponse, loginless, socket) {
   var assert         = require('affirm.js')
   var _              = require('lodash')
   var mangler        = require('mangler')
+  var accountUtil    = require('./accountUtil')
   var account        = {}
   account.openOrders = {}
   var positions, pnl, availableMargin, readonlyApp, ioconnected
@@ -13,51 +14,41 @@ module.exports = function (serverResponse, loginless, socket) {
   var promises       = {}
   account.logging    = false
 
-  var eventMap = {
-    // version         : onVersion,
-    trade           : onTrade,
-    orderbook       : onOrderBook,
-    difforderbook   : onDiffOrderBook,
-    config          : onConfig,
-    readonly        : onReadOnly,
-    // advisory        : onAdvisory,
-    reconnect       : onConnect,
-    connect_error   : onDisconnect,
-    connect_timeout : onDisconnect,
-    reconnect_error : onDisconnect,
-    reconnect_failed: onDisconnect,
-    order_add       : onOrderAdd,
-    order_del       : onOrderDel,
-    order_error     : onError,
-    orders_del      : onFlat,
-    order_update    : onOrderUpdate,
-    user_message    : myMessageReceived,
-    ntp             : loginless.socket.ntp.bind(loginless.socket),
-    auth_error      : onAuthError
-  }
-
-  Object.keys(eventMap).forEach(function (event) {
-    socket.removeListener(event, eventMap[event])
-    socket.on(event, eventMap[event])
-
-  })
-
   account.getOpenOrders = function () {
-    return Object.keys(account.openOrders).map(function(uuid){
+    return Object.keys(account.openOrders).map(function (uuid) {
       return _.cloneDeep(account.openOrders[uuid])
     })
   }
 
+  account.getBidAks = function () {
+    return bidAsk
+  }
+
+  account.getbalance = function () {
+    /*{
+     balance:multisig-balance + margin-balance + pnl,
+     availableMargin:userDetail.margin,
+     multisig :{confirmed, unconfirmed},
+     margin :{confirmed, unconfirmed}
+     }*/
+
+    return {
+      availableMargin: availableMargin
+    }
+  }
+
   account.createOrders = function (orders) {
-    console.log('create order', orders[0].price, orders[0].side, orders[0].orderType)
+    logOrders(orders)
     validator.validateCreateOrder(orders)
+    account.assertAvailableMargin(orders)
     return promised(orders, "POST", "/order")
   }
 
   account.updateOrders = function (orders) {
-    console.log('update order', orders[0].price, orders[0].side, orders[0].orderType, orders[0].uuid, orders.length)
+    logOrders(orders)
     validator.validateUpdateOrder(orders, account.openOrders)
-    return promised({orders:orders}, "PUT", "/order")
+    account.assertAvailableMargin(orders)
+    return promised({ orders: orders }, "PUT", "/order")
   }
 
   account.cancelOrder = function (order) {
@@ -69,24 +60,6 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   account.transferToMargin = function (amountInBTC) {
-
-  }
-
-  account.getBidAks = function () {
-    return bidAsk
-  }
-
-  account.getAvailableMargin = function () {
-    return availableMargin
-  }
-
-  account.balance = function () {
-    /*{
-     balance:multisig-balance + margin-balance + pnl,
-     availableMargin:userDetail.margin,
-     multisig :{confirmed, unconfirmed},
-     margin :{confirmed, unconfirmed}
-     }*/
 
   }
 
@@ -152,6 +125,7 @@ module.exports = function (serverResponse, loginless, socket) {
   function onOrderDel(response) {
     delete account.openOrders[response.result[0]]
     respondSuccess(response.requestid, response.result[0])
+    availableMargin = account.calculateAvailableMargin(account.getOpenOrders())
   }
 
   function onFlat(response) {
@@ -192,9 +166,9 @@ module.exports = function (serverResponse, loginless, socket) {
 
   function updateOrders(orders) {
     for (var i = 0; i < orders.length; i++) {
-      var order                      = orders[i];
-      account.openOrders[order.uuid] = order
+      account.openOrders[orders[i].uuid] = orders[i]
     }
+    availableMargin = account.calculateAvailableMargin(account.getOpenOrders())
   }
 
   function onOrderBook(data) {
@@ -210,12 +184,6 @@ module.exports = function (serverResponse, loginless, socket) {
 
   function onConfig(config) {
     account.config = config
-  }
-
-  function getCustomerResponse(orders) {
-    return orders.map(function (order) {
-      return _.cloneDeep(order)
-    })
   }
 
   function respondSuccess(requestid, response) {
@@ -243,9 +211,71 @@ module.exports = function (serverResponse, loginless, socket) {
     availableMargin    = userDetails.margin
   }
 
-  Object.keys(loginless.getAccount()).forEach(function (key) {
-    account[key] = loginless.getAccount()[key]
-  })
+  account.assertAvailableMargin = function (orders) {
+    var ordersMap = getOpenOrdersIfSuccess(orders)
+    account.calculateAvailableMargin(_.toArray(ordersMap))
+  }
+
+  function getOpenOrdersIfSuccess(orders) {
+    var ordersMap = _.cloneDeep(account.openOrders)
+    for (var i = 0; i < orders.length; i++) {
+      var order       = orders[i];
+      var uuid        = order.uuid || nodeUUID.v4()
+      ordersMap[uuid] = order
+    }
+    return ordersMap
+  }
+
+  account.calculateAvailableMargin = function(orders) {
+    return accountUtil.computeAvailableMarginCoverage(orders, pnl, config.instrument, availableMargin)
+  }
+
+  function logOrders(orders) {
+    if (!account.logging) return
+    orders.forEach(function (order) {
+      console.log(order.uuid ? "update" : "create", "uuid", order.uuid, "price", order.price, "side", order.side, "type", order.orderType)
+    })
+  }
+
+  function copyFromLoginlessAccount() {
+    Object.keys(loginless.getAccount()).forEach(function (key) {
+      account[key] = loginless.getAccount()[key]
+    })
+  }
+
+  function setupSocketEvents() {
+    var eventMap = {
+      // version         : onVersion,
+      trade           : onTrade,
+      orderbook       : onOrderBook,
+      difforderbook   : onDiffOrderBook,
+      config          : onConfig,
+      readonly        : onReadOnly,
+      // advisory        : onAdvisory,
+      reconnect       : onConnect,
+      connect_error   : onDisconnect,
+      connect_timeout : onDisconnect,
+      reconnect_error : onDisconnect,
+      reconnect_failed: onDisconnect,
+      order_add       : onOrderAdd,
+      order_del       : onOrderDel,
+      order_error     : onError,
+      orders_del      : onFlat,
+      order_update    : onOrderUpdate,
+      user_message    : myMessageReceived,
+      ntp             : loginless.socket.ntp.bind(loginless.socket),
+      auth_error      : onAuthError
+    }
+
+    Object.keys(eventMap).forEach(function (event) {
+      socket.removeListener(event, eventMap[event])
+      socket.on(event, eventMap[event])
+
+    })
+  }
+
+  copyFromLoginlessAccount()
+  setupSocketEvents()
 
   return account
 }

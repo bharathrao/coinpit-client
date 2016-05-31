@@ -1,5 +1,5 @@
 {
-  "createOrders"    : {
+  "createOrders"         : {
     "order"         : {
       "userid"     : "n4QdGfLHAHASCu846fjBsNRBTkjRKdXP5Z",
       "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
@@ -28,7 +28,7 @@
       "targetPrice": 1
     }
   },
-  "createOrdersFail": {
+  "createOrdersFail"     : {
     "order"         : {
       "userid"     : "n4QdGfLHAHASCu846fjBsNRBTkjRKdXP5Z",
       "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
@@ -51,7 +51,7 @@
       }
     }
   },
-  "updateOrders"    : {
+  "updateOrders"         : {
     "order"         : {
       "userid"     : "n4QdGfLHAHASCu846fjBsNRBTkjRKdXP5Z",
       "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
@@ -82,6 +82,46 @@
       "orderType"  : "LMT",
       "stopPrice"  : 0.5,
       "targetPrice": 1
+    }
+  },
+  "assertAvailableMargin": {
+    "openOrders"    : {
+      "uuid1": {
+        "uuid": "uuid1"
+      },
+      "uuid2": {
+        "uuid": "uuid2"
+      },
+      "uuid3": {
+        "uuid": "uuid3"
+      }
+    },
+    "orders"        : [
+      {
+        "uuid"   : "uuid2",
+        "updated": true
+      }, {
+        "created": true
+      }
+    ],
+    "serverResponse": {
+      "instrument": {
+        "ticksperpoint": 10
+      }
+    },
+    "result"        : {
+      "orders": [
+        {
+          "uuid": "uuid1"
+        }, {
+          "uuid"   : "uuid2",
+          "updated": true
+        }, {
+          "uuid": "uuid3"
+        }, {
+          "created": true
+        }
+      ]
     }
   }
 }
