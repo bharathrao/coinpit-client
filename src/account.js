@@ -227,7 +227,7 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   account.calculateAvailableMargin = function(orders) {
-    return accountUtil.computeAvailableMarginCoverage(orders, pnl, config.instrument, availableMargin)
+    return accountUtil.computeAvailableMarginCoverage(orders, pnl, account.config.instrument, availableMargin)
   }
 
   function logOrders(orders) {
