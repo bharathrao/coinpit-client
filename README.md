@@ -1,1 +1,2 @@
 # coinpit-client
+Alpha
