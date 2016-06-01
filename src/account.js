@@ -1,4 +1,4 @@
-module.exports = function (serverResponse, loginless, socket) {
+module.exports = function (serverResponse, loginless, socket, listener) {
   var bluebird       = require('bluebird')
   var nodeUUID       = require('node-uuid')
   var assert         = require('affirm.js')
@@ -38,17 +38,19 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   account.createOrders = function (orders) {
-    logOrders(orders)
-    validator.validateCreateOrder(orders)
-    account.assertAvailableMargin(orders)
-    return promised(orders, "POST", "/order")
+    return promised(orders, "POST", "/order", function(){
+      logOrders(orders)
+      validator.validateCreateOrder(orders)
+      account.assertAvailableMargin(orders)
+    })
   }
 
   account.updateOrders = function (orders) {
-    logOrders(orders)
-    validator.validateUpdateOrder(orders, account.openOrders)
-    account.assertAvailableMargin(orders)
-    return promised({ orders: orders }, "PUT", "/order")
+    return promised({ orders: orders }, "PUT", "/order", function(){
+      logOrders(orders)
+      validator.validateUpdateOrder(orders, account.openOrders)
+      account.assertAvailableMargin(orders)
+    })
   }
 
   account.cancelOrder = function (order) {
@@ -144,7 +146,7 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   function myMessageReceived(message) {
-    if (account.logging) console.log("myMessageReceived: ", message)
+    if (account.logging) console.log("user details refreshed ")
     if (message.error) {
       handleError(message.error)
     }
@@ -152,12 +154,20 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   function onTrade(trade) {
-    console.log('trades', trade)
+    listener('trade', trade)
 
   }
 
-  function promised(body, method, uri) {
+  function promised(body, method, uri, fn) {
     return new bluebird(function (resolve, reject) {
+      if(fn){
+        try {
+          fn()
+        } catch (e) {
+          reject(e)
+          return
+        }
+      }
       var requestid       = nodeUUID.v1()
       promises[requestid] = { resolve: resolve, reject: reject, time: Date.now() }
       loginless.socket.send(socket, method, uri, { requestid: requestid }, body)
