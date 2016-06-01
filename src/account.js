@@ -1,4 +1,4 @@
-module.exports = function (serverResponse, loginless, socket, listener) {
+module.exports = function (serverResponse, loginless, socket) {
   var bluebird       = require('bluebird')
   var nodeUUID       = require('node-uuid')
   var assert         = require('affirm.js')
@@ -154,7 +154,7 @@ module.exports = function (serverResponse, loginless, socket, listener) {
   }
 
   function onTrade(trade) {
-    listener('trade', trade)
+    // console.log('trades', trade)
 
   }
 
