@@ -14,8 +14,6 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   account.config     = serverResponse.config
   account.openOrders = {}
   account.logging    = false
-  insightutil.subscribe(account.accountid, addressListener)
-  insightutil.subscribe(account.serverAddress, addressListener)
 
   var multisigBalance, marginBalance
 
@@ -76,6 +74,14 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   account.clearMargin = function () {
 
+  }
+
+  account.updateAccountBalance = function () {
+    return bluebird.all([insightutil.getAddress(account.serverAddress), insightutil.getAddress(account.accountid)])
+      .then(function (balances) {
+        addressListener(balances[0])
+        addressListener(balances[1])
+      })
   }
 
   account.getUserDetails = function () {
@@ -304,8 +310,13 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     }
   }
 
-  copyFromLoginlessAccount()
-  setupSocketEvents()
+  function init() {
+    setupSocketEvents()
+    copyFromLoginlessAccount()
+    insightutil.subscribe(account.accountid, addressListener)
+    insightutil.subscribe(account.serverAddress, addressListener)
+  }
 
+  init()
   return account
 }
