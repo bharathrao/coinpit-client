@@ -1,5 +1,5 @@
 {
-  "createOrders"         : {
+  "createOrders"                      : {
     "order"         : {
       "userid"     : "n4QdGfLHAHASCu846fjBsNRBTkjRKdXP5Z",
       "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
@@ -28,7 +28,7 @@
       "targetPrice": 1
     }
   },
-  "createOrdersFail"     : {
+  "createOrdersFail"                  : {
     "order"         : {
       "userid"     : "n4QdGfLHAHASCu846fjBsNRBTkjRKdXP5Z",
       "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
@@ -51,7 +51,7 @@
       }
     }
   },
-  "updateOrders"         : {
+  "updateOrders"                      : {
     "order"         : {
       "userid"     : "n4QdGfLHAHASCu846fjBsNRBTkjRKdXP5Z",
       "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
@@ -84,7 +84,7 @@
       "targetPrice": 1
     }
   },
-  "assertAvailableMargin": {
+  "assertAvailableMargin"             : {
     "openOrders"    : {
       "uuid1": {
         "uuid": "uuid1"
@@ -122,6 +122,27 @@
           "created": true
         }
       ]
+    }
+  },
+  "createOrdersWithInsufficientMargin": {
+    "order"         : {
+      "userid"     : "n4QdGfLHAHASCu846fjBsNRBTkjRKdXP5Z",
+      "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
+      "side"       : "sell",
+      "quantity"   : 1,
+      "price"      : 416,
+      "orderType"  : "LMT",
+      "stopPrice"  : 0.5,
+      "targetPrice": 1
+    },
+    "serverResponse": {
+      "instrument": {
+        "ticksperpoint": 10
+      }
+    },
+    "loginlessEvent": "order_error",
+    "result"        : {
+      "message": "Insufficient Margin"
     }
   }
 }

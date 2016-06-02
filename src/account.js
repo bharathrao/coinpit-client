@@ -1,18 +1,23 @@
-module.exports = function (serverResponse, loginless, socket) {
-  var bluebird       = require('bluebird')
-  var nodeUUID       = require('node-uuid')
-  var assert         = require('affirm.js')
-  var _              = require('lodash')
-  var mangler        = require('mangler')
-  var accountUtil    = require('./accountUtil')
-  var account        = {}
-  account.openOrders = {}
+module.exports = function (serverResponse, loginless, socket, insightutil) {
+  var bluebird    = require('bluebird')
+  var nodeUUID    = require('node-uuid')
+  var assert      = require('affirm.js')
+  var _           = require('lodash')
+  var mangler     = require('mangler')
+  var accountUtil = require('./accountUtil')
+  var account     = {}
   var positions, pnl, availableMargin, readonlyApp, ioconnected
-  var bidAsk         = {}
+  var bidAsk      = {}
+  var validator   = require("./validator")(serverResponse.instrument)
+  var promises    = {}
+
   account.config     = serverResponse.config
-  var validator      = require("./validator")(serverResponse.instrument)
-  var promises       = {}
+  account.openOrders = {}
   account.logging    = false
+  insightutil.subscribe(account.accountid, addressListener)
+  insightutil.subscribe(account.serverAddress, addressListener)
+
+  var multisigBalance, marginBalance
 
   account.getOpenOrders = function () {
     return Object.keys(account.openOrders).map(function (uuid) {
@@ -25,20 +30,16 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   account.getbalance = function () {
-    /*{
-     balance:multisig-balance + margin-balance + pnl,
-     availableMargin:userDetail.margin,
-     multisig :{confirmed, unconfirmed},
-     margin :{confirmed, unconfirmed}
-     }*/
-
     return {
-      availableMargin: availableMargin
+      balance        : multisigBalance.balance + marginBalance.balance + pnl,
+      availableMargin: availableMargin,
+      multisig       : _.cloneDeep(multisigBalance),
+      margin         : _.cloneDeep(marginBalance)
     }
   }
 
   account.createOrders = function (orders) {
-    return promised(orders, "POST", "/order", function(){
+    return promised(orders, "POST", "/order", function () {
       logOrders(orders)
       validator.validateCreateOrder(orders)
       account.assertAvailableMargin(orders)
@@ -46,7 +47,7 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   account.updateOrders = function (orders) {
-    return promised({ orders: orders }, "PUT", "/order", function(){
+    return promised({ orders: orders }, "PUT", "/order", function () {
       logOrders(orders)
       validator.validateUpdateOrder(orders, account.openOrders)
       account.assertAvailableMargin(orders)
@@ -125,8 +126,8 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   function onOrderDel(response) {
-    delete account.openOrders[response.result[0]]
-    respondSuccess(response.requestid, response.result[0])
+    delete account.openOrders[response.result]
+    respondSuccess(response.requestid, response.result)
     availableMargin = account.calculateAvailableMargin(account.getOpenOrders())
   }
 
@@ -160,7 +161,7 @@ module.exports = function (serverResponse, loginless, socket) {
 
   function promised(body, method, uri, fn) {
     return new bluebird(function (resolve, reject) {
-      if(fn){
+      if (fn) {
         try {
           fn()
         } catch (e) {
@@ -168,7 +169,7 @@ module.exports = function (serverResponse, loginless, socket) {
           return
         }
       }
-      var requestid       = nodeUUID.v1()
+      var requestid       = nodeUUID.v4()
       promises[requestid] = { resolve: resolve, reject: reject, time: Date.now() }
       loginless.socket.send(socket, method, uri, { requestid: requestid }, body)
     })
@@ -222,8 +223,13 @@ module.exports = function (serverResponse, loginless, socket) {
   }
 
   account.assertAvailableMargin = function (orders) {
+    var margin = account.getPostAvailableMargin(orders)
+    assert(margin >= 0, "Insufficient margin ", margin, ".add margin")
+  }
+
+  account.getPostAvailableMargin = function (orders) {
     var ordersMap = getOpenOrdersIfSuccess(orders)
-    account.calculateAvailableMargin(_.toArray(ordersMap))
+    return account.calculateAvailableMargin(_.toArray(ordersMap))
   }
 
   function getOpenOrdersIfSuccess(orders) {
@@ -236,8 +242,8 @@ module.exports = function (serverResponse, loginless, socket) {
     return ordersMap
   }
 
-  account.calculateAvailableMargin = function(orders) {
-    return accountUtil.computeAvailableMarginCoverage(orders, pnl, account.config.instrument, availableMargin)
+  account.calculateAvailableMargin = function (orders) {
+    return accountUtil.computeAvailableMarginCoverage(orders, pnl, account.config.instrument, marginBalance.balance)
   }
 
   function logOrders(orders) {
@@ -282,6 +288,20 @@ module.exports = function (serverResponse, loginless, socket) {
       socket.on(event, eventMap[event])
 
     })
+  }
+
+  function addressListener(addressInfo) {
+    switch (addressInfo.address) {
+      case account.accountid:
+        // if (myConfirmedBalance !== addressInfo.confirmed) adjustMarginSequentially()
+        multisigBalance = addressInfo
+        break;
+      case account.serverAddress:
+        marginBalance = addressInfo
+        break
+      default:
+        insightutil.unsubscribe(addressInfo.address)
+    }
   }
 
   copyFromLoginlessAccount()
