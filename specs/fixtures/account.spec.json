@@ -13,6 +13,9 @@
     "serverResponse": {
       "instrument": {
         "ticksperpoint": 10
+      },
+      "config": {
+        "network": "testnet"
       }
     },
     "loginlessEvent": "order_add",
@@ -42,6 +45,9 @@
     "serverResponse": {
       "instrument": {
         "ticksperpoint": 10
+      },
+      "config": {
+        "network": "testnet"
       }
     },
     "loginlessEvent": "order_error",
@@ -65,6 +71,9 @@
     "serverResponse": {
       "instrument": {
         "ticksperpoint": 10
+      },
+      "config": {
+        "network": "testnet"
       }
     },
     "change"        : {
@@ -107,6 +116,9 @@
     "serverResponse": {
       "instrument": {
         "ticksperpoint": 10
+      },
+      "config": {
+        "network": "testnet"
       }
     },
     "result"        : {
@@ -138,6 +150,9 @@
     "serverResponse": {
       "instrument": {
         "ticksperpoint": 10
+      },
+      "config": {
+        "network": "testnet"
       }
     },
     "loginlessEvent": "order_error",

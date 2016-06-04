@@ -5,6 +5,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   var _           = require('lodash')
   var mangler     = require('mangler')
   var accountUtil = require('./accountUtil')
+  var bitcoinutil = require("bitcoinutil")(serverResponse.config.network)
+  var txutil      = require('./txutil')
   var account     = {}
   var positions, pnl, availableMargin, readonlyApp, ioconnected
   var bidAsk      = {}
@@ -27,7 +29,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return bidAsk
   }
 
-  account.getbalance = function () {
+  account.getBalance = function () {
     return {
       balance        : multisigBalance.balance + marginBalance.balance + pnl,
       availableMargin: availableMargin,
@@ -60,20 +62,41 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return promised([], "DELETE", "/order")
   }
 
-  account.transferToMargin = function (amountInBTC) {
-
+  account.transferToMargin = function (amountInSatoshi, feeInclusive) {
+    return insightutil.getConfirmedUnspents(multisigBalance.address).then(function (confirmedUnspents) {
+      var tx     = txutil.createTx(
+        {
+          input       : multisigBalance.address,
+          destination : marginBalance.address,
+          amount      : amountInSatoshi,
+          unspents    : confirmedUnspents,
+          isMultisig  : true,
+          network     : account.config.network,
+          feeInclusive: feeInclusive
+        })
+      var signed = bitcoinutil.sign(tx, account.userPrivateKey, account.redeem, true)
+      return loginless.rest.post('/api/margin', { requestid: nodeUUID.v4() }, [{ txs: [signed] }])
+    })
   }
 
-  account.withdraw = function (address, amount, commission) {
-
+  account.withdraw = function (address, amountSatoshi, feeSatoshi) {
+    return insightutil.getConfirmedUnspents(account.accountid).then(function (unspents) {
+      var amount   = Math.floor(amountSatoshi)
+      var fee      = Math.floor(feeSatoshi)
+      var tx       = txutil.createTx({ input: account.accountid, isMultisig: true, amount: amount, destination: address, unspents: unspents, txFee: fee })
+      var signedTx = bitcoinutil.sign(tx, account.userPrivateKey, account.redeem, true)
+      return loginless.rest.post('/api/tx', {}, { tx: signedTx })
+    })
   }
 
   account.recoveryTx = function () {
-
+    return loginless.rest.get('/api/withdrawtx').then(function (withdraw) {
+      return bitcoinutil.sign(withdraw.tx, account.userPrivateKey, account.redeem)
+    }).catch(handleError)
   }
 
   account.clearMargin = function () {
-
+    return loginless.rest.del("/api/margin").catch(handleError)
   }
 
   account.updateAccountBalance = function () {
@@ -166,6 +189,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function promised(body, method, uri, fn) {
+    var requestid = nodeUUID.v4()
     return new bluebird(function (resolve, reject) {
       if (fn) {
         try {
@@ -175,9 +199,12 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
           return
         }
       }
-      var requestid       = nodeUUID.v4()
-      promises[requestid] = { resolve: resolve, reject: reject, time: Date.now() }
-      loginless.socket.send(socket, method, uri, { requestid: requestid }, body)
+      try {
+        promises[requestid] = { resolve: resolve, reject: reject, time: Date.now() }
+        loginless.socket.send(socket, method, uri, { requestid: requestid }, body)
+      } catch (e) {
+        onError({ requestid: requestid, error: e })
+      }
     })
   }
 
@@ -222,6 +249,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function refreshWithUserDetails(userDetails) {
+    if (!userDetails) return
     account.openOrders = mangler.mapify(userDetails.orders, 'uuid')
     positions          = userDetails.positions
     pnl                = userDetails.pnl
