@@ -4,6 +4,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   var assert      = require('affirm.js')
   var _           = require('lodash')
   var mangler     = require('mangler')
+  var util        = require('util')
   var accountUtil = require('./accountUtil')
   var bitcoinutil = require("bitcoinutil")(serverResponse.config.network)
   var txutil      = require('./txutil')
@@ -31,7 +32,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   account.getBalance = function () {
     return {
-      balance        : multisigBalance.balance + marginBalance.balance + pnl ? pnl.pnl : 0,
+      balance        : multisigBalance.balance + marginBalance.balance + (pnl ? pnl.pnl : 0),
       availableMargin: availableMargin,
       multisig       : _.cloneDeep(multisigBalance),
       margin         : _.cloneDeep(marginBalance)
@@ -176,7 +177,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function myMessageReceived(message) {
-    if (account.logging) console.log("user details refreshed ")
+    if (account.logging) util.log(Date.now(), "user details refreshed ")
     if (message.error) {
       handleError(message.error)
     }
@@ -184,7 +185,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function onTrade(trade) {
-    // console.log('trades', trade)
+    // util.log('Date.now(), trades', trade)
 
   }
 
@@ -245,7 +246,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function handleError() {
-    if (account.logging) console.log(arguments)
+    if (account.logging) util.log(Date.now(), arguments)
   }
 
   function refreshWithUserDetails(userDetails) {
@@ -283,7 +284,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   function logOrders(orders) {
     if (!account.logging) return
     orders.forEach(function (order) {
-      console.log(order.uuid ? "update" : "create", "uuid", order.uuid, "price", order.price, "side", order.side, "type", order.orderType)
+      util.log(Date.now(), order.uuid ? "update" : "create", "uuid", order.uuid, "price", order.price, "side", order.side, "type", order.orderType)
     })
   }
 
