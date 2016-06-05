@@ -31,7 +31,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   account.getBalance = function () {
     return {
-      balance        : multisigBalance.balance + marginBalance.balance + pnl,
+      balance        : multisigBalance.balance + marginBalance.balance + pnl ? pnl.pnl : 0,
       availableMargin: availableMargin,
       multisig       : _.cloneDeep(multisigBalance),
       margin         : _.cloneDeep(marginBalance)

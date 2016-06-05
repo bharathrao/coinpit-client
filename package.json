@@ -1,6 +1,6 @@
 {
   "name": "coinpit-client",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "client library for coinpit",
   "main": "src/index.js",
   "scripts": {
