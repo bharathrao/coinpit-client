@@ -24,6 +24,7 @@ module.exports = (function () {
       txFee               = txutil.getTransactionFee(inoutWithoutFee.inputs.length, inoutWithoutFee.outputs.length, isMultisig)
     }
     var transferAmount = feeInclusive ? amount - txFee : amount
+    assert(transferAmount > bitcoinDust, "Not enough amount that can be transferred. amount: " + amount + " fee: " + txFee)
     var inouts = txutil.getInOutFromUnspentsForAmount(unspents, transferAmount, source, destination, txFee)
     return txutil.createBitcoinTransaction(inouts.inputs, inouts.outputs, network)
   }
