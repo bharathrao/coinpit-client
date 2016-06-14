@@ -26,7 +26,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     })
   }
 
-  account.getBidAks = function () {
+  account.getBidAsk = function () {
     return bidAsk
   }
 
