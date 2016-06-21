@@ -1,4 +1,20 @@
 {
+  "closedOrders": {
+    "result1": {
+
+    },
+    "result2": {
+
+    },
+    "serverResponse": {
+      "instrument": {
+        "ticksperpoint": 10
+      },
+      "config": {
+        "network": "testnet"
+      }
+    }
+  },
   "createOrders"                      : {
     "order"         : {
       "userid"     : "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",

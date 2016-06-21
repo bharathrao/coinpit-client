@@ -6,7 +6,7 @@ var socket      = require("./socket.mock")
 var util        = require('../src/util')
 var accountUtil = require('../src/accountUtil')
 var assert      = require("affirm.js")
-var insighteUtil = {subscribe: emptyFunction, unsubscribe: emptyFunction}
+var insighteUtil = {subscribe: nop, unsubscribe: nop}
 require('mocha-generators').install()
 
 describe('account test', function () {
@@ -16,8 +16,8 @@ describe('account test', function () {
     var loginless = Loginless(test.loginlessEvent, [test.result])
     var account   = Account(test.serverResponse, loginless, socket, insighteUtil)
 
-    account.assertAvailableMargin    = emptyFunction
-    account.calculateAvailableMargin = emptyFunction
+    account.assertAvailableMargin    = nop
+    account.calculateAvailableMargin = nop
 
     var created = yield account.createOrders([test.order])
     expect(created).to.eql([test.result])
@@ -29,8 +29,8 @@ describe('account test', function () {
     var loginless = Loginless(test.loginlessEvent, test.result)
     var account   = Account(test.serverResponse, loginless, socket, insighteUtil)
 
-    account.assertAvailableMargin    = emptyFunction
-    account.calculateAvailableMargin = emptyFunction
+    account.assertAvailableMargin    = nop
+    account.calculateAvailableMargin = nop
     try {
       yield account.createOrders([test.order])
       expect().fail("Exception was expected, but was successful")
@@ -45,8 +45,8 @@ describe('account test', function () {
     var loginless = Loginless(test.loginlessEvent, [test.result])
     var account   = Account(test.serverResponse, loginless, socket, insighteUtil)
 
-    account.assertAvailableMargin       = emptyFunction
-    account.calculateAvailableMargin    = emptyFunction
+    account.assertAvailableMargin       = nop
+    account.calculateAvailableMargin    = nop
     account.openOrders[test.order.uuid] = test.order
 
     var updated              = util.clone(test.order)
@@ -54,6 +54,19 @@ describe('account test', function () {
     var created              = yield account.updateOrders([updated])
     expect(created).to.eql([test.result])
     expect(account.openOrders[test.result.uuid].price).to.eql(test.result.price)
+  })
+
+  it.skip('closedOrders', function*() {
+    var test      = fixtures.closedOrders
+    var loginless = Loginless()
+    var account   = Account(test.serverResponse, loginless, socket, insighteUtil)
+
+    account.assertAvailableMargin    = nop
+    account.calculateAvailableMargin = nop
+    var closedOrders1 = yield account.closedOrders(undefined, 1)
+    expect(closedOrders1).to.eql(test.result1)
+    var closedOrders2 = yield account.closedOrders(closedOrders1[0], 1)
+    expect(closedOrders2).to.eql(test.result2)
   })
 
   it('assertAvailableMargin', function*() {
@@ -74,7 +87,7 @@ describe('account test', function () {
     account.assertAvailableMargin    = function () {
       assert(false, test.result.message)
     }
-    account.calculateAvailableMargin = emptyFunction
+    account.calculateAvailableMargin = nop
     try {
       yield account.createOrders([test.order])
       expect().fail("Exception was expected, but was successful")
@@ -86,7 +99,6 @@ describe('account test', function () {
 
 })
 
-function emptyFunction() {
+function nop() {
   return 1
 }
-

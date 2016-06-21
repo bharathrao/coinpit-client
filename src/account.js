@@ -59,8 +59,18 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return promised([order.uuid], "DELETE", "/order")
   }
 
+  account.cancelOrders = function(orders) {
+    return bluebird.all(orders.map(function(order){
+      return account.cancelOrder(order)
+    }))
+  }
+
   account.closeAll = function () {
     return promised([], "DELETE", "/order")
+  }
+
+  account.getClosedOrders = function(uuid) {
+    return promised([], "GET", "/closedorder" + (uuid ? uuid : ""))
   }
 
   account.transferToMargin = function (amountInSatoshi, feeInclusive) {
