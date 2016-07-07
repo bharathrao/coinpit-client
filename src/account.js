@@ -184,7 +184,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   function onOrderPatch(response) {
     var result = response.result
     result.forEach(function (eachResponse) {
-      if (eachResponse.response.error) return console.log('could not complete the request ', eachResponse)
+      if (eachResponse.error) return console.log('could not complete the request ', eachResponse)
       PATCH_HANDLER[eachResponse.op](eachResponse.response)
     })
     respondSuccess(response.requestid, _.cloneDeep(response.result))
