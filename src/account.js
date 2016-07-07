@@ -39,6 +39,25 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     }
   }
 
+  account.patchOrders = function (patch) {
+    var payload = []
+    patch.cancels && patch.cancels.forEach(function (cancel) {
+      payload.push({ op: 'remove', path: '/' + cancel.uuid })
+    })
+    if (patch.updates) {
+      payload.push({ op: 'replace', path: "", value: { orders: patch.updates } })
+    }
+    if (patch.creates) {
+      payload.push({ op: 'add', path: "", value: patch.creates })
+    }
+    if (payload.length === 0) return emptyPromise()
+    return promised(payload, "PATCH", "/order", function () {
+      logPatch(payload)
+      if (patch.creates) validator.validateCreateOrder(patch.creates)
+      if (patch.updates) validator.validateUpdateOrder(patch.updates)
+    })
+  }
+
   account.createOrders = function (orders) {
     return promised(orders, "POST", "/order", function () {
       logOrders(orders)
@@ -59,8 +78,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return promised([order.uuid], "DELETE", "/order")
   }
 
-  account.cancelOrders = function(orders) {
-    return bluebird.all(orders.map(function(order){
+  account.cancelOrders = function (orders) {
+    return bluebird.all(orders.map(function (order) {
       return account.cancelOrder(order)
     }))
   }
@@ -69,7 +88,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return promised([], "DELETE", "/order")
   }
 
-  account.getClosedOrders = function(uuid) {
+  account.getClosedOrders = function (uuid) {
     return promised([], "GET", "/closedorder" + (uuid ? uuid : ""))
   }
 
@@ -156,6 +175,21 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     loginless.socket.onAuthError(socket, message)
   }
 
+  var PATCH_HANDLER = {
+    remove : updateOnOrderDel,
+    replace: updateOrders,
+    add    : updateOrders
+  }
+
+  function onOrderPatch(response) {
+    var result = response.result
+    result.forEach(function (eachResponse) {
+      if (eachResponse.response.error) return console.log('could not complete the request ', eachResponse)
+      PATCH_HANDLER[eachResponse.op](eachResponse.response)
+    })
+    respondSuccess(response.requestid, _.cloneDeep(response.result))
+  }
+
   function onOrderAdd(response) {
     updateOrders(response.result)
     respondSuccess(response.requestid, _.cloneDeep(response.result))
@@ -166,8 +200,12 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function onOrderDel(response) {
-    delete account.openOrders[response.result]
+    updateOnOrderDel(response.result)
     respondSuccess(response.requestid, response.result)
+  }
+
+  function updateOnOrderDel(result) {
+    delete account.openOrders[result]
     availableMargin = account.calculateAvailableMargin(account.getOpenOrders())
   }
 
@@ -291,6 +329,11 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return accountUtil.computeAvailableMarginCoverage(orders, pnl, account.config.instrument, marginBalance.balance)
   }
 
+  function logPatch(payload) {
+    if (!account.logging) return
+    util.log(Date.now(), JSON.stringify(payload, null, -2))
+  }
+
   function logOrders(orders) {
     if (!account.logging) return
     orders.forEach(function (order) {
@@ -323,6 +366,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       order_error     : onError,
       orders_del      : onFlat,
       order_update    : onOrderUpdate,
+      order_patch     : onOrderPatch,
       user_message    : myMessageReceived,
       ntp             : loginless.socket.ntp.bind(loginless.socket),
       auth_error      : onAuthError
@@ -354,6 +398,12 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     copyFromLoginlessAccount()
     insightutil.subscribe(account.accountid, addressListener)
     insightutil.subscribe(account.serverAddress, addressListener)
+  }
+
+  function emptyPromise() {
+    return new bluebird(function (resolve, reject) {
+      return resolve()
+    })
   }
 
   init()
