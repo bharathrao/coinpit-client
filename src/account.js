@@ -44,17 +44,17 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     patch.cancels && patch.cancels.forEach(function (cancel) {
       payload.push({ op: 'remove', path: '/' + cancel.uuid })
     })
-    if (patch.updates) {
+    if (patch.updates && patch.updates.length > 0) {
       payload.push({ op: 'replace', path: "", value: { orders: patch.updates } })
     }
-    if (patch.creates) {
+    if (patch.creates && patch.creates.length > 0) {
       payload.push({ op: 'add', path: "", value: patch.creates })
     }
     if (payload.length === 0) return emptyPromise()
     return promised(payload, "PATCH", "/order", function () {
       logPatch(payload)
       if (patch.creates) validator.validateCreateOrder(patch.creates)
-      if (patch.updates) validator.validateUpdateOrder(patch.updates)
+      if (patch.updates) validator.validateUpdateOrder(patch.updates, account.openOrders)
     })
   }
 
