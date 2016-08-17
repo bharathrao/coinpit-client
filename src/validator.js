@@ -22,9 +22,11 @@ module.exports = function (instrument) {
 
   validator.validateUpdateOrder = function (orders, originalOrders) {
     for (var i = 0; i < orders.length; i++) {
-      var order = orders[i];
-      assert(originalOrders[order.uuid], 'No order found with uuid: ' + order.uuid, 422)
-      assert(originalOrders[order.uuid].price, 'Orders created with no price can not be modified. uuid: ' + order.uuid, 422)
+      var order         = orders[i];
+      var originalOrder = originalOrders[order.uuid]
+      assert(originalOrder, 'No order found with uuid: ' + order.uuid, 422)
+      assert(originalOrder.price, 'Orders created with no price can not be modified. uuid: ' + order.uuid, 422)
+      if(originalOrder.orderType === 'TGT' && order.price === 'NONE') return
       validateIfNumberGreaterThanZero("price", order.price, instrument.ticksperpoint)
     }
   }
@@ -59,7 +61,7 @@ module.exports = function (instrument) {
   }
 
   function assertTargetPrice(order) {
-    if (order.targetPrice !== undefined)
+    if (order.targetPrice !== undefined && order.targetPrice !== 'NONE')
       validateIfNumberGreaterThanOrEqualToZero("targetPrice", order.targetPrice, instrument.ticksperpoint)
   }
 
