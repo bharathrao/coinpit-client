@@ -50,6 +50,13 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     if (patch.creates && patch.creates.length > 0) {
       payload.push({ op: 'add', path: "", value: patch.creates })
     }
+    if (patch.merge && patch.merge.length > 0) {
+      payload.push({ op: 'merge', path: "", from: patch.uuids })
+    }
+    if (patch.split && patch.split.length > 0) {
+      payload.push({ op: 'split', path: "", from: patch.uuid, quantity: patch.quantity })
+    }
+
     if (payload.length === 0) return emptyPromise()
     return promised(payload, "PATCH", "/order", function () {
       logPatch(payload)
@@ -224,7 +231,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     }
   }
 
-  function myMessageReceived(message) {
+  function onUserMessage(message) {
     if (account.logging) util.log(Date.now(), "user details refreshed ")
     if (message.error) {
       handleError(message.error)
@@ -367,7 +374,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       orders_del      : onFlat,
       order_update    : onOrderUpdate,
       order_patch     : onOrderPatch,
-      user_message    : myMessageReceived,
+      user_message    : onUserMessage,
       ntp             : loginless.socket.ntp.bind(loginless.socket),
       auth_error      : onAuthError
     }

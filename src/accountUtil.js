@@ -23,19 +23,17 @@ module.exports = (function () {
     if (order.orderType === "TGT")  return 0
 
     var quantity = order.quantity - (order.filled || 0) - (order.cancelled || 0)
-    var cushion  = instrument.stopcushion
+    var cushion  = order.cushion || instrument.stopcushion
 
     if (order.orderType === "STP") {
-      var executionPrice    = order.executionPrice
-      var price             = order.price
-      var marginPerQuantity = marginSide[order.side] * (executionPrice - price) + cushion
-
-      return quantity * marginPerQuantity
+      var entryAmount = order.entryAmount || order.executionPrice * quantity
+      // var executionPrice    = order.executionPrice
+      var exitAmount = order.price * quantity
+      return marginSide[order.side] * (entryAmount - exitAmount) + cushion * quantity
     }
 
     return quantity * (order.stopPrice + cushion )
   }
 
-  
   return accUtil
 })()
