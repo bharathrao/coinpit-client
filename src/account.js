@@ -192,7 +192,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     var result = response.result
     result.forEach(function (eachResponse) {
       if (eachResponse.error) return console.log('could not complete the request ', eachResponse)
-      PATCH_HANDLER[eachResponse.op](eachResponse.response)
+      if (PATCH_HANDLER[eachResponse.op])PATCH_HANDLER[eachResponse.op](eachResponse.response)
+      else console.log('eachResponse.op not found ', eachResponse.op, eachResponse)
     })
     respondSuccess(response.requestid, _.cloneDeep(response.result))
   }
