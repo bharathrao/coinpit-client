@@ -148,6 +148,14 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return loginless.rest.get("/api/userdetails").then(refreshWithUserDetails).catch(handleError)
   }
 
+  account.getPositions = function(){
+    return _.cloneDeep(positions)
+  }
+
+  account.getPnl = function(){
+    return _.cloneDeep(pnl)
+  }
+
   account.fixedPrice = function (price) {
     assert(price, 'Invalid Price:' + price)
     return price.toFixed(account.config.instrument.ticksize) - 0
