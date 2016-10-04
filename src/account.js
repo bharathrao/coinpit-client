@@ -13,7 +13,10 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   var bidAsk      = {}
   var validator   = require("./validator")(serverResponse.instrument)
   var promises    = {}
+  var band        = {}
 
+  account.loginless  = loginless
+  account.socket     = socket
   account.config     = serverResponse.config
   account.openOrders = {}
   account.logging    = false
@@ -51,7 +54,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       payload.push({ op: 'add', path: "", value: patch.creates })
     }
     if (patch.merge && patch.merge.length > 0) {
-      payload.push({ op: 'merge', path: "", from: patch.uuids })
+      payload.push({ op: 'merge', path: "", from: patch.merge })
     }
     if (patch.split && patch.split.length > 0) {
       payload.push({ op: 'split', path: "", from: patch.uuid, quantity: patch.quantity })
@@ -148,11 +151,11 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return loginless.rest.get("/api/userdetails").then(refreshWithUserDetails).catch(handleError)
   }
 
-  account.getPositions = function(){
+  account.getPositions = function () {
     return _.cloneDeep(positions)
   }
 
-  account.getPnl = function(){
+  account.getPnl = function () {
     return _.cloneDeep(pnl)
   }
 
@@ -163,6 +166,10 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   account.newUUID = function () {
     return nodeUUID.v4()
+  }
+
+  account.getPriceBand = function () {
+    return band
   }
 
   function onReadOnly(status) {
@@ -191,9 +198,24 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   var PATCH_HANDLER = {
-    remove : updateOnOrderDel,
+    remove : removeOrders,
     replace: updateOrders,
-    add    : updateOrders
+    add    : updateOrders,
+    merge  : onOrderMerge,
+    split  : updateOrders
+  }
+
+  function removeOrders(response) {
+    response.forEach(uuid =>updateOnOrderDel(uuid))
+  }
+
+  function onOrderMerge(response) {
+    response.removed.forEach(function (uuid) {
+      delete account.openOrders[uuid]
+    })
+    response.added.forEach(function (added) {
+      account.openOrders[added.uuid] = added
+    })
   }
 
   function onOrderPatch(response) {
@@ -385,7 +407,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       order_patch     : onOrderPatch,
       user_message    : onUserMessage,
       ntp             : loginless.socket.ntp.bind(loginless.socket),
-      auth_error      : onAuthError
+      auth_error      : onAuthError,
+      priceband       : onPriceBand,
     }
 
     Object.keys(eventMap).forEach(function (event) {
@@ -407,6 +430,10 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       default:
         insightutil.unsubscribe(addressInfo.address)
     }
+  }
+
+  function onPriceBand(priceBand) {
+    band = priceBand
   }
 
   function init() {
