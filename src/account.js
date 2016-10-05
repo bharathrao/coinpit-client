@@ -173,19 +173,27 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function onReadOnly(status) {
-    if (readonlyApp == status.readonly) return
-    if (status.readonly) return readonlyApp = status.readonly
-    loginless.socket.register(socket)
-    account.getUserDetails().then(function () {
-      readonlyApp = status.readonly
-    })
+    try {
+      if (readonlyApp == status.readonly) return
+      if (status.readonly) return readonlyApp = status.readonly
+      loginless.socket.register(socket)
+      account.getUserDetails().then(function () {
+        readonlyApp = status.readonly
+      })
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   function onConnect(message) {
-    if (!ioconnected) {
-      ioconnected = true
-      loginless.socket.register(socket)
-      account.getUserDetails()
+    try {
+      if (!ioconnected) {
+        ioconnected = true
+        loginless.socket.register(socket)
+        account.getUserDetails()
+      }
+    } catch (e) {
+      console.log(e)
     }
   }
 
@@ -194,7 +202,11 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function onAuthError(message) {
-    loginless.socket.onAuthError(socket, message)
+    try {
+      loginless.socket.onAuthError(socket, message)
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   var PATCH_HANDLER = {
@@ -219,18 +231,26 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function onOrderPatch(response) {
-    var result = response.result
-    result.forEach(function (eachResponse) {
-      if (eachResponse.error) return console.log('could not complete the request ', eachResponse)
-      if (PATCH_HANDLER[eachResponse.op])PATCH_HANDLER[eachResponse.op](eachResponse.response)
-      else console.log('eachResponse.op not found ', eachResponse.op, eachResponse)
-    })
-    respondSuccess(response.requestid, _.cloneDeep(response.result))
+    try {
+      var result = response.result
+      result.forEach(function (eachResponse) {
+        if (eachResponse.error) return console.log('could not complete the request ', eachResponse)
+        if (PATCH_HANDLER[eachResponse.op])PATCH_HANDLER[eachResponse.op](eachResponse.response)
+        else console.log('eachResponse.op not found ', eachResponse.op, eachResponse)
+      })
+      respondSuccess(response.requestid, _.cloneDeep(response.result))
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   function onOrderAdd(response) {
-    updateOrders(response.result)
-    respondSuccess(response.requestid, _.cloneDeep(response.result))
+    try {
+      updateOrders(response.result)
+      respondSuccess(response.requestid, _.cloneDeep(response.result))
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   function onOrderUpdate(response) {
@@ -238,8 +258,12 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function onOrderDel(response) {
-    updateOnOrderDel(response.result)
-    respondSuccess(response.requestid, response.result)
+    try {
+      updateOnOrderDel(response.result)
+      respondSuccess(response.requestid, response.result)
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   function updateOnOrderDel(result) {
@@ -248,26 +272,38 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function onFlat(response) {
-    account.getUserDetails().then(function () {
-      respondSuccess(response.requestid, _.cloneDeep(account.openOrders))
-    })
+    try {
+      account.getUserDetails().then(function () {
+        respondSuccess(response.requestid, _.cloneDeep(account.openOrders))
+      })
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   function onError(response) {
-    respondError(response.requestid, response.error)
-    refreshWithUserDetails(response.userDetails)
-    if (!response.requestid) {
-      //todo: this needs to be handled
-      handleError("Error without requestid", response.error)
+    try {
+      respondError(response.requestid, response.error)
+      refreshWithUserDetails(response.userDetails)
+      if (!response.requestid) {
+        //todo: this needs to be handled
+        handleError("Error without requestid", response.error)
+      }
+    } catch (e) {
+      console.log(e)
     }
   }
 
   function onUserMessage(message) {
-    if (account.logging) util.log(Date.now(), "user details refreshed ")
-    if (message.error) {
-      handleError(message.error)
+    try {
+      if (account.logging) util.log(Date.now(), "user details refreshed ")
+      if (message.error) {
+        handleError(message.error)
+      }
+      refreshWithUserDetails(message.userDetails)
+    } catch (e) {
+      console.log(e)
     }
-    refreshWithUserDetails(message.userDetails)
   }
 
   function onTrade(trade) {
@@ -303,14 +339,22 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function onOrderBook(data) {
-    bidAsk = {
-      bid: data.bid,
-      ask: data.ask
+    try {
+      bidAsk = {
+        bid: data.bid,
+        ask: data.ask
+      }
+    } catch (e) {
+      console.log(e)
     }
   }
 
   function onDiffOrderBook(diffOrderBook) {
-    onOrderBook(diffOrderBook)
+    try {
+      onOrderBook(diffOrderBook)
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   function onConfig(config) {
