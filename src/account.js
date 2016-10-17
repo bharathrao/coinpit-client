@@ -11,13 +11,14 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   var account     = {}
   var positions, pnl, availableMargin, readonlyApp, ioconnected
   var bidAsk      = {}
-  var validator   = require("./validator")(serverResponse.instrument)
-  var promises    = {}
-  var band        = {}
+
+  var promises = {}
+  var band     = {}
 
   account.loginless  = loginless
   account.socket     = socket
   account.config     = serverResponse.config
+  var validator      = require("./validator")(instrument())
   account.openOrders = {}
   account.logging    = false
 
