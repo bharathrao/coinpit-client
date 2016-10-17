@@ -148,7 +148,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   account.getUserDetails = function () {
-    return loginless.rest.get("/api/userdetails").then(refreshWithUserDetails).catch(handleError)
+    return loginless.rest.get("/api/userdetails" + "?instrument=" + instrument().symbol).then(refreshWithUserDetails).catch(handleError)
   }
 
   account.getPositions = function () {
@@ -161,7 +161,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   account.fixedPrice = function (price) {
     assert(price, 'Invalid Price:' + price)
-    return price.toFixed(account.config.instrument.ticksize) - 0
+    return price.toFixed(instrument().ticksize) - 0
   }
 
   account.newUUID = function () {
@@ -324,7 +324,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       }
       try {
         promises[requestid] = { resolve: resolve, reject: reject, time: Date.now() }
-        loginless.socket.send(socket, method, uri, { requestid: requestid }, body)
+        loginless.socket.send(socket, method, uri, { requestid: requestid }, body, { instrument: instrument().symbol })
       } catch (e) {
         onError({ requestid: requestid, error: e })
       }
@@ -408,7 +408,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   account.calculateAvailableMargin = function (orders) {
-    return accountUtil.computeAvailableMarginCoverage(orders, pnl, account.config.instrument, marginBalance.balance)
+    return accountUtil.computeAvailableMarginCoverage(orders, pnl, instrument(), marginBalance.balance)
   }
 
   function logPatch(payload) {
@@ -491,6 +491,10 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return new bluebird(function (resolve, reject) {
       return resolve()
     })
+  }
+
+  function instrument() {
+    return account.config.instrument[account.config.default.instrument]
   }
 
   init()

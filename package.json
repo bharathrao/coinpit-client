@@ -1,6 +1,6 @@
 {
   "name": "coinpit-client",
-  "version": "0.1.8",
+  "version": "1.0.0",
   "description": "client library for coinpit",
   "main": "src/index.js",
   "scripts": {
@@ -32,7 +32,7 @@
     "bluebird": "^3.4.0",
     "insight-util": "~0.0.3",
     "lodash": "^4.13.1",
-    "loginless": "~0.1.4",
+    "loginless": "^1.0.0",
     "mangler": "^1.0.1",
     "node-uuid": "^1.4.7",
     "rest.js": "~0.0.8",
