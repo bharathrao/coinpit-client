@@ -34,9 +34,9 @@
     "lodash": "^4.13.1",
     "loginless": "^1.0.1",
     "mangler": "^1.0.1",
-    "node-uuid": "^1.4.7",
     "rest.js": "~0.0.8",
-    "socket.io-client": "^1.4.6"
+    "socket.io-client": "^1.4.6",
+    "uuid": "^3.0.0"
   },
   "devDependencies": {
     "del": "^2.2.0",

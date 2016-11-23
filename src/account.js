@@ -1,6 +1,6 @@
 module.exports = function (serverResponse, loginless, socket, insightutil) {
   var bluebird    = require('bluebird')
-  var nodeUUID    = require('node-uuid')
+  var nodeUUID    = require('uuid')
   var assert      = require('affirm.js')
   var _           = require('lodash')
   var mangler     = require('mangler')
