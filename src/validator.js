@@ -1,32 +1,32 @@
 var assert = require('affirm.js')
 
-module.exports = function (instrument) {
+module.exports = (function () {
   var validator         = {}
   var validOrdersTypes  = { MKT: "Market", LMT: "Limit", SLM: "Stop Limit", STM: "Stop Market" }
   var validOrdersString = JSON.stringify(validOrdersTypes)
   var validOrderSide    = { buy: true, sell: true }
 
-  validator.validateCreateOrder = function (orders) {
+  validator.validateCreateOrder = function (instrument, orders) {
     for (var i = 0; i < orders.length; i++) {
       var order = orders[i];
       assertUserId(order)
       assertOrderSide(order)
       assertQuantity(order)
-      assertPrice(order)
+      assertPrice(order, instrument)
       assertOrderType(order)
       assertClientId(order)
-      assertStopPrice(order)
-      assertTargetPrice(order)
+      assertStopPrice(order, instrument)
+      assertTargetPrice(order, instrument)
     }
   }
 
-  validator.validateUpdateOrder = function (orders, originalOrders) {
+  validator.validateUpdateOrder = function (instrument, orders, originalOrders) {
     for (var i = 0; i < orders.length; i++) {
       var order         = orders[i];
       var originalOrder = originalOrders[order.uuid]
       assert(originalOrder, 'No order found with uuid: ' + order.uuid, 422)
       assert(originalOrder.price, 'Orders created with no price can not be modified. uuid: ' + order.uuid, 422)
-      if(originalOrder.orderType === 'TGT' && order.price === 'NONE') return
+      if (originalOrder.orderType === 'TGT' && order.price === 'NONE') return
       validateIfNumberGreaterThanZero("price", order.price, instrument.ticksperpoint)
     }
   }
@@ -43,7 +43,7 @@ module.exports = function (instrument) {
     validateIfNumberGreaterThanZero("quantity", order.quantity, 1)
   }
 
-  function assertPrice(order) {
+  function assertPrice(order, instrument) {
     if (order.orderType === 'MKT') {
       assert(order.price === undefined, ': MKT orders cannot specify price ' + order.price, 422)
     } else {
@@ -55,12 +55,12 @@ module.exports = function (instrument) {
     assert(validOrdersTypes[order.orderType], order.orderType + " is not a valid order type. Valid orderTypes are " + validOrdersString)
   }
 
-  function assertStopPrice(order) {
+  function assertStopPrice(order, instrument) {
     if (order.stopPrice !== undefined)
       validateIfNumberGreaterThanZero("stopPrice", order.stopPrice, instrument.ticksperpoint)
   }
 
-  function assertTargetPrice(order) {
+  function assertTargetPrice(order, instrument) {
     if (order.targetPrice !== undefined && order.targetPrice !== 'NONE')
       validateIfNumberGreaterThanOrEqualToZero("targetPrice", order.targetPrice, instrument.ticksperpoint)
   }
@@ -89,4 +89,4 @@ module.exports = function (instrument) {
 
   return validator
 
-}
+})()

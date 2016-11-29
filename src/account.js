@@ -18,16 +18,14 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   account.loginless  = loginless
   account.socket     = socket
   account.config     = serverResponse.config
-  var validator      = require("./validator")(instrument())
+  var validator      = require("./validator")
   account.openOrders = {}
   account.logging    = false
 
   var multisigBalance, marginBalance
 
   account.getOpenOrders = function () {
-    return Object.keys(account.openOrders).map(function (uuid) {
-      return _.cloneDeep(account.openOrders[uuid])
-    })
+    return _.cloneDeep(account.openOrders)
   }
 
   account.getBidAsk = function () {
@@ -43,7 +41,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     }
   }
 
-  account.patchOrders = function (patch) {
+  account.patchOrders = function (symbol, patch) {
     var payload = []
     patch.cancels && patch.cancels.forEach(function (cancel) {
       payload.push({ op: 'remove', path: '/' + cancel.uuid })
@@ -62,45 +60,45 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     }
 
     if (payload.length === 0) return emptyPromise()
-    return promised(payload, "PATCH", "/order", function () {
+    return promised(symbol, payload, "PATCH", "/order", function () {
       logPatch(payload)
-      if (patch.creates) validator.validateCreateOrder(patch.creates)
-      if (patch.updates) validator.validateUpdateOrder(patch.updates, account.openOrders)
+      if (patch.creates) validator.validateCreateOrder(instrument(symbol), patch.creates)
+      if (patch.updates) validator.validateUpdateOrder(instrument(symbol), patch.updates, account.openOrders[symbol])
     })
   }
 
-  account.createOrders = function (orders) {
-    return promised(orders, "POST", "/order", function () {
+  account.createOrders = function (symbol, orders) {
+    return promised(symbol, orders, "POST", "/order", function () {
       logOrders(orders)
-      validator.validateCreateOrder(orders)
+      validator.validateCreateOrder(instrument(symbol), orders)
       account.assertAvailableMargin(orders)
     })
   }
 
-  account.updateOrders = function (orders) {
-    return promised({ orders: orders }, "PUT", "/order", function () {
+  account.updateOrders = function (symbol, orders) {
+    return promised(symbol, { orders: orders }, "PUT", "/order", function () {
       logOrders(orders)
-      validator.validateUpdateOrder(orders, account.openOrders)
+      validator.validateUpdateOrder(instrument(symbol), orders, account.openOrders[symbol])
       account.assertAvailableMargin(orders)
     })
   }
 
-  account.cancelOrder = function (order) {
-    return promised([order.uuid], "DELETE", "/order")
+  account.cancelOrder = function (symbol, order) {
+    return promised(symbol, [order.uuid], "DELETE", "/order")
   }
 
-  account.cancelOrders = function (orders) {
+  account.cancelOrders = function (symbol, orders) {
     return bluebird.all(orders.map(function (order) {
-      return account.cancelOrder(order)
+      return account.cancelOrder(symbol, order)
     }))
   }
 
-  account.closeAll = function () {
-    return promised([], "DELETE", "/order")
+  account.closeAll = function (symbol) {
+    return promised(symbol, [], "DELETE", "/order")
   }
 
-  account.getClosedOrders = function (uuid) {
-    return promised([], "GET", "/closedorder" + (uuid ? uuid : ""))
+  account.getClosedOrders = function (symbol, uuid) {
+    return promised(symbol, [], "GET", "/closedorder" + (uuid ? uuid : ""))
   }
 
   account.transferToMargin = function (amountInSatoshi, feeInclusive) {
@@ -149,7 +147,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   account.getUserDetails = function () {
-    return loginless.rest.get("/api/userdetails" + "?instrument=" + instrument().symbol).then(refreshWithUserDetails).catch(handleError)
+    return loginless.rest.get("/api/userdetails").then(refreshWithUserDetails).catch(handleError)
   }
 
   account.getPositions = function () {
@@ -160,17 +158,17 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return _.cloneDeep(pnl)
   }
 
-  account.fixedPrice = function (price) {
+  account.fixedPrice = function (symbol, price) {
     assert(price, 'Invalid Price:' + price)
-    return price.toFixed(instrument().ticksize) - 0
+    return price.toFixed(instrument(symbol).ticksize) - 0
   }
 
   account.newUUID = function () {
     return nodeUUID.v4()
   }
 
-  account.getPriceBand = function () {
-    return band
+  account.getPriceBand = function (symbol) {
+    return band[symbol]
   }
 
   function onReadOnly(status) {
@@ -182,7 +180,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
         readonlyApp = status.readonly
       })
     } catch (e) {
-      console.log(e)
+      util.log(e);
+      util.log(e.stack)
     }
   }
 
@@ -194,7 +193,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
         account.getUserDetails()
       }
     } catch (e) {
-      console.log(e)
+      util.log(e);
+      util.log(e.stack)
     }
   }
 
@@ -206,7 +206,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     try {
       loginless.socket.onAuthError(socket, message)
     } catch (e) {
-      console.log(e)
+      util.log(e);
+      util.log(e.stack)
     }
   }
 
@@ -219,15 +220,23 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   function removeOrders(response) {
-    response.forEach(uuid =>updateOnOrderDel(uuid))
+    removeOrdersFromCache(response)
+    availableMargin = account.calculateAvailableMargin(account.getOpenOrders())
   }
 
   function onOrderMerge(response) {
-    response.removed.forEach(function (uuid) {
-      delete account.openOrders[uuid]
-    })
+    removeOrdersFromCache(response.removed)
     response.added.forEach(function (added) {
-      account.openOrders[added.uuid] = added
+      account.openOrders[added.instrument]             = account.openOrders[added.instrument] || {}
+      account.openOrders[added.instrument][added.uuid] = added
+    })
+  }
+
+  function removeOrdersFromCache(uuids) {
+    Object.keys(account.openOrders).forEach(function (orders) {
+      uuids.forEach(function (uuid) {
+        delete orders[uuid]
+      })
     })
   }
 
@@ -241,7 +250,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       })
       respondSuccess(response.requestid, _.cloneDeep(response.result))
     } catch (e) {
-      console.log(e)
+      util.log(e);
+      util.log(e.stack)
     }
   }
 
@@ -250,7 +260,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       updateOrders(response.result)
       respondSuccess(response.requestid, _.cloneDeep(response.result))
     } catch (e) {
-      console.log(e)
+      util.log(e);
+      util.log(e.stack)
     }
   }
 
@@ -260,16 +271,13 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   function onOrderDel(response) {
     try {
-      updateOnOrderDel(response.result)
+      removeOrdersFromCache(response.result)
+      availableMargin = account.calculateAvailableMargin(account.getOpenOrders())
       respondSuccess(response.requestid, response.result)
     } catch (e) {
-      console.log(e)
+      util.log(e);
+      util.log(e.stack)
     }
-  }
-
-  function updateOnOrderDel(result) {
-    delete account.openOrders[result]
-    availableMargin = account.calculateAvailableMargin(account.getOpenOrders())
   }
 
   function onFlat(response) {
@@ -278,7 +286,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
         respondSuccess(response.requestid, _.cloneDeep(account.openOrders))
       })
     } catch (e) {
-      console.log(e)
+      util.log(e);
+      util.log(e.stack)
     }
   }
 
@@ -291,7 +300,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
         handleError("Error without requestid", response.error)
       }
     } catch (e) {
-      console.log(e)
+      util.log(e);
+      util.log(e.stack)
     }
   }
 
@@ -303,7 +313,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       }
       refreshWithUserDetails(message.userDetails)
     } catch (e) {
-      console.log(e)
+      util.log(e);
+      util.log(e.stack)
     }
   }
 
@@ -312,7 +323,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   }
 
-  function promised(body, method, uri, fn) {
+  function promised(symbol, body, method, uri, fn) {
+    assertValidSymbol(symbol)
     var requestid = nodeUUID.v4()
     return new bluebird(function (resolve, reject) {
       if (fn) {
@@ -325,28 +337,43 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       }
       try {
         promises[requestid] = { resolve: resolve, reject: reject, time: Date.now() }
-        loginless.socket.send(socket, method, uri, { requestid: requestid }, body, { instrument: instrument().symbol })
+        loginless.socket.send(socket, method, uri, { requestid: requestid }, body, { instrument: symbol })
       } catch (e) {
         onError({ requestid: requestid, error: e })
       }
     })
   }
 
+  function assertValidSymbol(symbol) {
+    var isValid = false
+    for (var i = 0; i < account.config.instruments.length; i++) {
+      var instrument = account.config.instruments[i];
+      isValid        = isValid || instrument === symbol
+    }
+    assert(isValid, 'Invalid symbol ' + symbol + '. Allowed ' + account.config.intsruments)
+  }
+
   function updateOrders(orders) {
     for (var i = 0; i < orders.length; i++) {
-      account.openOrders[orders[i].uuid] = orders[i]
+      account.openOrders[orders[i].instrument]                 = account.openOrders[orders[i].instrument] || {}
+      account.openOrders[orders[i].instrument][orders[i].uuid] = orders[i]
     }
-    availableMargin = account.calculateAvailableMargin(account.getOpenOrders())
+    availableMargin = account.calculateAvailableMarginIfCrossShifted(account.getOpenOrders())
   }
 
   function onOrderBook(data) {
     try {
-      bidAsk = {
-        bid: data.bid,
-        ask: data.ask
+      var symbols = Object.keys(data)
+      for (var i = 0; i < symbols.length; i++) {
+        var symbol     = symbols[i];
+        bidAsk[symbol] = {
+          bid: data[symbol].bid,
+          ask: data[symbol].ask
+        }
       }
     } catch (e) {
-      console.log(e)
+      util.log(e);
+      util.log(e.stack)
     }
   }
 
@@ -354,7 +381,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     try {
       onOrderBook(diffOrderBook)
     } catch (e) {
-      console.log(e)
+      util.log(e);
+      util.log(e.stack)
     }
   }
 
@@ -382,7 +410,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   function refreshWithUserDetails(userDetails) {
     if (!userDetails) return
-    account.openOrders = mangler.mapify(userDetails.orders, 'uuid')
+    account.openOrders = userDetails.orders
     positions          = userDetails.positions
     pnl                = userDetails.pnl
     availableMargin    = userDetails.margin
@@ -395,21 +423,26 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   account.getPostAvailableMargin = function (orders) {
     var ordersMap = getOpenOrdersIfSuccess(orders)
-    return account.calculateAvailableMargin(_.toArray(ordersMap))
+    return account.calculateAvailableMarginIfCrossShifted(ordersMap)
   }
 
   function getOpenOrdersIfSuccess(orders) {
     var ordersMap = _.cloneDeep(account.openOrders)
     for (var i = 0; i < orders.length; i++) {
-      var order       = orders[i];
-      var uuid        = order.uuid || nodeUUID.v4()
-      ordersMap[uuid] = order
+      var order                         = orders[i];
+      var uuid                          = order.uuid || nodeUUID.v4()
+      ordersMap[order.instrument]       = ordersMap[order.instrument] || {}
+      ordersMap[order.instrument][uuid] = order
     }
     return ordersMap
   }
 
   account.calculateAvailableMargin = function (orders) {
-    return accountUtil.computeAvailableMarginCoverage(orders, pnl, instrument(), marginBalance.balance)
+    return accountUtil.computeAvailableMarginCoverage(orders, pnl, account.config.instrument, marginBalance.balance)
+  }
+
+  account.calculateAvailableMarginIfCrossShifted = function (orders) {
+    return accountUtil.computeAvailableMarginCoverageIfCrossShifted(orders, pnl, account.config.instrument, marginBalance.balance)
   }
 
   function logPatch(payload) {

@@ -3,16 +3,18 @@ var fixtures    = require('fixtures.js')(__filename)
 var accountUtil = require("../src/accountUtil")
 
 var instrument = {
-  "symbol"       : "test",
-  "commission"   : 50000,
-  "reward"       : -25000,
-  "margin"       : 2100000,
-  "stopcushion"  : 1.0,
-  "stopprice"    : 1.0,
-  "targetprice"  : 2.0,
-  "ticksize"     : 1,
-  "ticksperpoint": 10,
-  "tickvalue"    : 100000
+  "test": {
+    "symbol"       : "test",
+    "commission"   : 50000,
+    "reward"       : -25000,
+    "margin"       : 2100000,
+    "stopcushion"  : 1.0,
+    "stopprice"    : 1.0,
+    "targetprice"  : 2.0,
+    "ticksize"     : 1,
+    "ticksperpoint": 10,
+    "tickvalue"    : 100000
+  }
 }
 describe("accountutil", function () {
   fixtures.forEach(function (test, index) {

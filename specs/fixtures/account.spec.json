@@ -6,15 +6,16 @@
     },
     "serverResponse": {
       "config": {
-        "instrument": {
+        "instrument" : {
           "test": {
             "ticksperpoint": 10
           }
         },
-        "default"   : {
+        "default"    : {
           "instrument": "test"
         },
-        "network"   : "testnet"
+        "instruments": ["test"],
+        "network"    : "testnet"
       }
     }
   },
@@ -26,20 +27,22 @@
       "quantity"   : 1,
       "price"      : 416,
       "orderType"  : "LMT",
+      "instrument" : "test",
       "stopPrice"  : 0.5,
       "targetPrice": 1
     },
     "serverResponse": {
       "config": {
-        "instrument": {
+        "instrument" : {
           "test": {
             "ticksperpoint": 10
           }
         },
-        "default"   : {
+        "default"    : {
           "instrument": "test"
         },
-        "network"   : "testnet"
+        "instruments": ["test"],
+        "network"    : "testnet"
       }
     },
     "loginlessEvent": "order_add",
@@ -51,6 +54,7 @@
       "quantity"   : 1,
       "price"      : 416,
       "orderType"  : "LMT",
+      "instrument" : "test",
       "stopPrice"  : 0.5,
       "targetPrice": 1
     }
@@ -63,20 +67,22 @@
       "quantity"   : 1,
       "price"      : 416,
       "orderType"  : "LMT",
+      "instrument" : "test",
       "stopPrice"  : 0.5,
       "targetPrice": 1
     },
     "serverResponse": {
       "config": {
-        "instrument": {
+        "instrument" : {
           "test": {
             "ticksperpoint": 10
           }
         },
-        "default"   : {
+        "default"    : {
           "instrument": "test"
         },
-        "network"   : "testnet"
+        "instruments": ["test"],
+        "network"    : "testnet"
       }
     },
     "loginlessEvent": "order_error",
@@ -94,20 +100,22 @@
       "quantity"   : 1,
       "price"      : 416,
       "orderType"  : "LMT",
+      "instrument" : "test",
       "stopPrice"  : 0.5,
       "targetPrice": 1
     },
     "serverResponse": {
       "config": {
-        "instrument": {
+        "instrument" : {
           "test": {
             "ticksperpoint": 10
           }
         },
-        "default"   : {
+        "default"    : {
           "instrument": "test"
         },
-        "network"   : "testnet"
+        "instruments": ["test"],
+        "network"    : "testnet"
       }
     },
     "change"        : {
@@ -123,53 +131,66 @@
       "quantity"   : 1,
       "price"      : 417,
       "orderType"  : "LMT",
+      "instrument" : "test",
       "stopPrice"  : 0.5,
       "targetPrice": 1
     }
   },
   "assertAvailableMargin"             : {
     "openOrders"    : {
-      "uuid1": {
-        "uuid": "uuid1"
-      },
-      "uuid2": {
-        "uuid": "uuid2"
-      },
-      "uuid3": {
-        "uuid": "uuid3"
+      "test": {
+        "uuid1": {
+          "uuid": "uuid1",
+          "instrument":"test"
+        },
+        "uuid2": {
+          "uuid": "uuid2",
+          "instrument":"test"
+        },
+        "uuid3": {
+          "uuid": "uuid3",
+          "instrument":"test"
+        }
       }
     },
     "orders"        : [
       {
         "uuid"   : "uuid2",
+        "instrument":"test",
         "updated": true
       }, {
-        "created": true
+        "created": true,
+        "instrument":"test"
       }
     ],
     "serverResponse": {
       "config": {
-        "instrument": {
+        "instrument" : {
           "test": {
             "ticksperpoint": 10
           }
         },
-        "default"   : {
+        "default"    : {
           "instrument": "test"
         },
-        "network"   : "testnet"
+        "instruments": ["test"],
+        "network"    : "testnet"
       }
     },
     "result"        : {
       "orders": [
         {
-          "uuid": "uuid1"
+          "uuid": "uuid1",
+          "instrument":"test"
         }, {
           "uuid"   : "uuid2",
+          "instrument":"test",
           "updated": true
         }, {
-          "uuid": "uuid3"
+          "uuid": "uuid3",
+          "instrument":"test"
         }, {
+          "instrument":"test",
           "created": true
         }
       ]
@@ -183,20 +204,22 @@
       "quantity"   : 1,
       "price"      : 416,
       "orderType"  : "LMT",
+      "instrument" : "test",
       "stopPrice"  : 0.5,
       "targetPrice": 1
     },
     "serverResponse": {
       "config": {
-        "instrument": {
+        "instrument" : {
           "test": {
             "ticksperpoint": 10
           }
         },
-        "default"   : {
+        "default"    : {
           "instrument": "test"
         },
-        "network"   : "testnet"
+        "instruments": ["test"],
+        "network"    : "testnet"
       }
     },
     "loginlessEvent": "order_error",
