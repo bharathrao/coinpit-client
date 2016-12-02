@@ -21,7 +21,7 @@ describe('account test', function () {
     account.calculateAvailableMarginIfCrossShifted = nop
 
     var symbol = test.serverResponse.config.default.instrument
-    var created = yield account.createOrders(symbol, [test.order])
+    var created = yield account.createOrders([test.order])
     expect(created).to.eql([test.result])
     expect(Object.keys(account.openOrders[symbol])).to.eql([test.result.uuid])
   })
@@ -35,7 +35,7 @@ describe('account test', function () {
     account.calculateAvailableMarginIfCrossShifted = nop
     try {
       var symbol = test.serverResponse.config.default.instrument
-      yield account.createOrders(symbol,[test.order])
+      yield account.createOrders([test.order])
       expect().fail("Exception was expected, but was successful")
     } catch (e) {
       expect(e).to.be.eql(test.result.message)
@@ -57,7 +57,7 @@ describe('account test', function () {
     var updated              = util.clone(test.order)
     updated[test.change.key] = test.change.value
 
-    var created              = yield account.updateOrders(symbol,[updated])
+    var created              = yield account.updateOrders([updated])
     expect(created).to.eql([test.result])
     expect(account.openOrders[symbol][test.result.uuid].price).to.eql(test.result.price)
   })
@@ -96,7 +96,7 @@ describe('account test', function () {
     }
     account.calculateAvailableMargin = nop
     try {
-      yield account.createOrders(symbol,[test.order])
+      yield account.createOrders([test.order])
       expect().fail("Exception was expected, but was successful")
     } catch (e) {
       expect(e.message).to.be.eql(test.result.message)

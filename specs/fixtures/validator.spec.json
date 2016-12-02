@@ -1,6 +1,7 @@
 {
   "MKT": {
     "uuid"         : "5c769200-a61a-11e5-a7c3-fc9e8dd0b100",
+    "instrument"   : "test",
     "clientid"     : "5c769200-a61a-11e5-a7c3-fc9e8dd0b100",
     "userid"       : "moQrEg798u7m5zn7pkxRx5xcdiv22ZCrRG",
     "side"         : "buy",
@@ -17,6 +18,7 @@
   },
   "LMT": {
     "uuid"        : "6b57a4c1-a618-11e5-9204-96c3e8f35343",
+    "instrument"  : "test",
     "clientid"    : "6b57a4c1-a618-11e5-9204-96c3e8f35343",
     "userid"      : "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
     "side"        : "sell",
@@ -33,6 +35,7 @@
   },
   "SLM": {
     "uuid"        : "6b57a4c1-a618-11e5-9204-96c3e8f35343",
+    "instrument"  : "test",
     "clientid"    : "6b57a4c1-a618-11e5-9204-96c3e8f35343",
     "userid"      : "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
     "side"        : "sell",
@@ -49,6 +52,7 @@
   },
   "STP": {
     "uuid"        : "b02ac276-a5c9-11e5-a1bf-5f2ca19542f0",
+    "instrument"  : "test",
     "clientid"    : "b02ac276-a5c9-11e5-a1bf-5f2ca19542f0",
     "userid"      : "moQrEg798u7m5zn7pkxRx5xcdiv22ZCrRG",
     "side"        : "sell",
@@ -65,6 +69,7 @@
   },
   "STM": {
     "uuid"        : "b02ac276-a5c9-11e5-a1bf-5f2ca19542f0",
+    "instrument"  : "test",
     "clientid"    : "b02ac276-a5c9-11e5-a1bf-5f2ca19542f0",
     "userid"      : "moQrEg798u7m5zn7pkxRx5xcdiv22ZCrRG",
     "side"        : "sell",
@@ -81,6 +86,7 @@
   },
   "TGT": {
     "uuid"        : "5c805603-a61a-11e5-b7d0-badd1d69c014",
+    "instrument"  : "test",
     "clientid"    : "5c805603-a61a-11e5-b7d0-badd1d69c014",
     "userid"      : "moQrEg798u7m5zn7pkxRx5xcdiv22ZCrRG",
     "side"        : "sell",

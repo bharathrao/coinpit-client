@@ -41,7 +41,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     }
   }
 
-  account.patchOrders = function (symbol, patch) {
+  account.patchOrders = function (patch) {
     var payload = []
     patch.cancels && patch.cancels.forEach(function (cancel) {
       payload.push({ op: 'remove', path: '/' + cancel.uuid })
@@ -60,45 +60,45 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     }
 
     if (payload.length === 0) return emptyPromise()
-    return promised(symbol, payload, "PATCH", "/order", function () {
+    return promised(payload, "PATCH", "/order", function () {
       logPatch(payload)
-      if (patch.creates) validator.validateCreateOrder(instrument(symbol), patch.creates)
-      if (patch.updates) validator.validateUpdateOrder(instrument(symbol), patch.updates, account.openOrders[symbol])
+      if (patch.creates) validator.validateCreateOrder(account.config.instrument, patch.creates)
+      if (patch.updates) validator.validateUpdateOrder(account.config.instrument, patch.updates, account.openOrders)
     })
   }
 
-  account.createOrders = function (symbol, orders) {
-    return promised(symbol, orders, "POST", "/order", function () {
+  account.createOrders = function (orders) {
+    return promised(orders, "POST", "/order", function () {
       logOrders(orders)
-      validator.validateCreateOrder(instrument(symbol), orders)
+      validator.validateCreateOrder(account.config.instrument, orders)
       account.assertAvailableMargin(orders)
     })
   }
 
-  account.updateOrders = function (symbol, orders) {
-    return promised(symbol, { orders: orders }, "PUT", "/order", function () {
+  account.updateOrders = function (orders) {
+    return promised({ orders: orders }, "PUT", "/order", function () {
       logOrders(orders)
-      validator.validateUpdateOrder(instrument(symbol), orders, account.openOrders[symbol])
+      validator.validateUpdateOrder(account.config.instrument, orders, account.openOrders)
       account.assertAvailableMargin(orders)
     })
   }
 
-  account.cancelOrder = function (symbol, order) {
-    return promised(symbol, [order.uuid], "DELETE", "/order")
+  account.cancelOrder = function (order) {
+    return promised([order.uuid], "DELETE", "/order")
   }
 
-  account.cancelOrders = function (symbol, orders) {
+  account.cancelOrders = function ( orders) {
     return bluebird.all(orders.map(function (order) {
-      return account.cancelOrder(symbol, order)
+      return account.cancelOrder(order)
     }))
   }
 
-  account.closeAll = function (symbol) {
-    return promised(symbol, [], "DELETE", "/order")
+  account.closeAll = function () {
+    return promised( [], "DELETE", "/order")
   }
 
   account.getClosedOrders = function (symbol, uuid) {
-    return promised(symbol, [], "GET", "/closedorder" + (uuid ? uuid : ""))
+    return promised([], "GET", "/closedorder" + (uuid ? uuid : "") + "?instrument=" + symbol)
   }
 
   account.transferToMargin = function (amountInSatoshi, feeInclusive) {
@@ -323,8 +323,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   }
 
-  function promised(symbol, body, method, uri, fn) {
-    assertValidSymbol(symbol)
+  function promised(body, method, uri, fn) {
     var requestid = nodeUUID.v4()
     return new bluebird(function (resolve, reject) {
       if (fn) {
@@ -337,20 +336,11 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       }
       try {
         promises[requestid] = { resolve: resolve, reject: reject, time: Date.now() }
-        loginless.socket.send(socket, method, uri, { requestid: requestid }, body, { instrument: symbol })
+        loginless.socket.send(socket, method, uri, { requestid: requestid }, body, {})
       } catch (e) {
         onError({ requestid: requestid, error: e })
       }
     })
-  }
-
-  function assertValidSymbol(symbol) {
-    var isValid = false
-    for (var i = 0; i < account.config.instruments.length; i++) {
-      var instrument = account.config.instruments[i];
-      isValid        = isValid || instrument === symbol
-    }
-    assert(isValid, 'Invalid symbol ' + symbol + '. Allowed ' + account.config.intsruments)
   }
 
   function updateOrders(orders) {

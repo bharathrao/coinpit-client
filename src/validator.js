@@ -6,9 +6,10 @@ module.exports = (function () {
   var validOrdersString = JSON.stringify(validOrdersTypes)
   var validOrderSide    = { buy: true, sell: true }
 
-  validator.validateCreateOrder = function (instrument, orders) {
+  validator.validateCreateOrder = function (instruments, orders) {
     for (var i = 0; i < orders.length; i++) {
       var order = orders[i];
+      var instrument = instruments[order.instrument]
       assertUserId(order)
       assertOrderSide(order)
       assertQuantity(order)
@@ -20,10 +21,11 @@ module.exports = (function () {
     }
   }
 
-  validator.validateUpdateOrder = function (instrument, orders, originalOrders) {
+  validator.validateUpdateOrder = function (instruments, orders, originalOrders) {
     for (var i = 0; i < orders.length; i++) {
       var order         = orders[i];
-      var originalOrder = originalOrders[order.uuid]
+      var instrument = instruments[order.instrument]
+      var originalOrder = originalOrders[order.instrument][order.uuid]
       assert(originalOrder, 'No order found with uuid: ' + order.uuid, 422)
       assert(originalOrder.price, 'Orders created with no price can not be modified. uuid: ' + order.uuid, 422)
       if (originalOrder.orderType === 'TGT' && order.price === 'NONE') return
