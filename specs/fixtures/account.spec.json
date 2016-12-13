@@ -8,7 +8,8 @@
       "config": {
         "instrument" : {
           "test": {
-            "ticksperpoint": 10
+            "ticksperpoint": 10,
+            "type":"quanto"
           }
         },
         "default"    : {
@@ -35,7 +36,8 @@
       "config": {
         "instrument" : {
           "test": {
-            "ticksperpoint": 10
+            "ticksperpoint": 10,
+            "type":"quanto"
           }
         },
         "default"    : {
@@ -75,7 +77,8 @@
       "config": {
         "instrument" : {
           "test": {
-            "ticksperpoint": 10
+            "ticksperpoint": 10,
+            "type":"quanto"
           }
         },
         "default"    : {
@@ -108,7 +111,8 @@
       "config": {
         "instrument" : {
           "test": {
-            "ticksperpoint": 10
+            "ticksperpoint": 10,
+            "type":"quanto"
           }
         },
         "default"    : {
@@ -167,7 +171,8 @@
       "config": {
         "instrument" : {
           "test": {
-            "ticksperpoint": 10
+            "ticksperpoint": 10,
+            "type":"quanto"
           }
         },
         "default"    : {
@@ -212,7 +217,8 @@
       "config": {
         "instrument" : {
           "test": {
-            "ticksperpoint": 10
+            "ticksperpoint": 10,
+            "type":"quanto"
           }
         },
         "default"    : {

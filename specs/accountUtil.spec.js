@@ -5,6 +5,7 @@ var accountUtil = require("../src/accountUtil")
 var instrument = {
   "test": {
     "symbol"       : "test",
+    "type"         : "quanto",
     "commission"   : 50000,
     "reward"       : -25000,
     "margin"       : 2100000,
@@ -16,11 +17,13 @@ var instrument = {
     "tickvalue"    : 100000
   }
 }
+
 describe("accountutil", function () {
   fixtures.forEach(function (test, index) {
     // if (index !== 1) return
     it(`${index}: ${test.description} `, function () {
-      var availableMargin = accountUtil.computeAvailableMarginCoverage(test.input.orders, test.input.profitAndLoss, instrument, test.input.availableMargin)
+      require("../src/instruments").init({instrument: instrument, instruments:["test"]})
+      var availableMargin = accountUtil.computeAvailableMarginCoverage(test.input.orders, test.input.profitAndLoss, test.input.availableMargin, {})
       expect(availableMargin).to.be.eql(test.result)
     })
   })

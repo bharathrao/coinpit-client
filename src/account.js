@@ -18,6 +18,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   account.loginless  = loginless
   account.socket     = socket
   account.config     = serverResponse.config
+  var instruments    = require('./instruments').init(account.config)
   var validator      = require("./validator")
   account.openOrders = {}
   account.logging    = false
@@ -87,14 +88,14 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return promised([order.uuid], "DELETE", "/order")
   }
 
-  account.cancelOrders = function ( orders) {
+  account.cancelOrders = function (orders) {
     return bluebird.all(orders.map(function (order) {
       return account.cancelOrder(order)
     }))
   }
 
   account.closeAll = function () {
-    return promised( [], "DELETE", "/order")
+    return promised([], "DELETE", "/order")
   }
 
   account.getClosedOrders = function (symbol, uuid) {
@@ -245,7 +246,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       var result = response.result
       result.forEach(function (eachResponse) {
         if (eachResponse.error) return console.log('could not complete the request ', eachResponse)
-        if (PATCH_HANDLER[eachResponse.op])PATCH_HANDLER[eachResponse.op](eachResponse.response)
+        if (PATCH_HANDLER[eachResponse.op]) PATCH_HANDLER[eachResponse.op](eachResponse.response)
         else console.log('eachResponse.op not found ', eachResponse.op, eachResponse)
       })
       respondSuccess(response.requestid, _.cloneDeep(response.result))
@@ -428,11 +429,11 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   account.calculateAvailableMargin = function (orders) {
-    return accountUtil.computeAvailableMarginCoverage(orders, pnl, account.config.instrument, marginBalance.balance)
+    return accountUtil.computeAvailableMarginCoverage(orders, pnl, marginBalance.balance, band)
   }
 
   account.calculateAvailableMarginIfCrossShifted = function (orders) {
-    return accountUtil.computeAvailableMarginCoverageIfCrossShifted(orders, pnl, account.config.instrument, marginBalance.balance)
+    return accountUtil.computeAvailableMarginCoverageIfCrossShifted(orders, pnl, marginBalance.balance, band)
   }
 
   function logPatch(payload) {
@@ -515,10 +516,6 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return new bluebird(function (resolve, reject) {
       return resolve()
     })
-  }
-
-  function instrument() {
-    return account.config.instrument[account.config.default.instrument]
   }
 
   init()
