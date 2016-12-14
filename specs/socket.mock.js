@@ -11,5 +11,8 @@ module.exports = (function () {
   socket.respond = function(event, response){
     eventMap[event](response)
   }
+  socket.emit = function(){
+
+  }
   return socket
 })()
