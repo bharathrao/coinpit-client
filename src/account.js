@@ -485,6 +485,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       socket.on(event, eventMap[event])
 
     })
+    socket.emit('GET /state', "")
   }
 
   function addressListener(addressInfo) {
