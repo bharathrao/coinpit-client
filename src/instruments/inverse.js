@@ -5,6 +5,7 @@ module.exports = function (config) {
   instrument.config = config
 
   instrument.amountSign = { buy: -1, sell: 1 }
+  instrument.positionSide = { buy: 1, sell: -1 }
 
   instrument.symbol    = config.symbol
   var contractusdvalue = config.contractusdvalue * 1e8
@@ -26,7 +27,8 @@ module.exports = function (config) {
     var price = order.price || bands[config.symbol].min
     if (order.side === 'buy') price = Math.min(price, bands[config.symbol].min)
     var cushion      = getCushion(order)
-    var maxStopPrice = price + instrument.amountSign * (config.crossMarginInitialStop + cushion)
+    var stopPoints   = order.crossMargin ? config.crossMarginInitialStop : order.stopPrice
+    var maxStopPrice = price - instrument.positionSide[order.side] * ( stopPoints + cushion)
     return quantity * Math.abs(instrument.getNormalizedPrice(price) - instrument.getNormalizedPrice(maxStopPrice))
   }
 

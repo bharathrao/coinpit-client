@@ -33,6 +33,10 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     return bidAsk
   }
 
+  account.getIndexBands = function () {
+    return band
+  }
+
   account.getBalance = function () {
     return {
       balance        : multisigBalance.balance + marginBalance.balance + (pnl ? pnl.pnl : 0),
