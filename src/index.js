@@ -1,15 +1,15 @@
 module.exports = function (coinpitUrl) {
-  var socket = require("socket.io-client")(coinpitUrl, { rejectUnauthorized: true })
-  var rest   = require('rest.js')
+  var socket   = require("socket.io-client")(coinpitUrl, { rejectUnauthorized: true })
+  var rest     = require('rest.js')
   var bluebird = require('bluebird')
-  var util = require('util')
-  var client = {}
+  var util     = require('util')
+  var client   = {}
 
   client.getAccount = function (privKey) {
     var config, loginless
 
     return rest.get(coinpitUrl + '/api/config').then(function (response) {
-      config    = response.body
+      config    = response.body.config
       loginless = createLoginless(config)
       return loginless.getServerKey(privKey).then(createAccount).then(updateUserDetails)
     })

@@ -18,7 +18,8 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   account.loginless  = loginless
   account.socket     = socket
   account.config     = serverResponse.config
-  var instruments    = require('./instruments').init(account.config)
+  account.instruments = serverResponse.instruments
+  var instruments    = require('./instruments').init(account.instruments)
   var validator      = require("./validator")
   account.openOrders = {}
   account.logging    = false
@@ -67,15 +68,15 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     if (payload.length === 0) return emptyPromise()
     return promised(payload, "PATCH", "/order", function () {
       logPatch(payload)
-      if (patch.creates) validator.validateCreateOrder(account.config.instrument, patch.creates)
-      if (patch.updates) validator.validateUpdateOrder(account.config.instrument, patch.updates, account.openOrders)
+      if (patch.creates) validator.validateCreateOrder(account.instruments, patch.creates)
+      if (patch.updates) validator.validateUpdateOrder(account.instruments, patch.updates, account.openOrders)
     })
   }
 
   account.createOrders = function (orders) {
     return promised(orders, "POST", "/order", function () {
       logOrders(orders)
-      validator.validateCreateOrder(account.config.instrument, orders)
+      validator.validateCreateOrder(account.instruments, orders)
       account.assertAvailableMargin(orders)
     })
   }
@@ -83,7 +84,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   account.updateOrders = function (orders) {
     return promised({ orders: orders }, "PUT", "/order", function () {
       logOrders(orders)
-      validator.validateUpdateOrder(account.config.instrument, orders, account.openOrders)
+      validator.validateUpdateOrder(account.instruments, orders, account.openOrders)
       account.assertAvailableMargin(orders)
     })
   }

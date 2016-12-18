@@ -22,7 +22,7 @@ describe("accountutil", function () {
   fixtures.forEach(function (test, index) {
     // if (index !== 1) return
     it(`${index}: ${test.description} `, function () {
-      require("../src/instruments").init({instrument: instrument, instruments:["test"]})
+      require("../src/instruments").init(instrument)
       var availableMargin = accountUtil.computeAvailableMarginCoverage(test.input.orders, test.input.profitAndLoss, test.input.availableMargin, {})
       expect(availableMargin).to.be.eql(test.result)
     })
