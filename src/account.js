@@ -1,4 +1,4 @@
-module.exports = function (serverResponse, loginless, socket, insightutil) {
+module.exports = function (serverResponse, loginless, insightutil, config, instrumentConfig) {
   var bluebird    = require('bluebird')
   var nodeUUID    = require('node-uuid')
   var assert      = require('affirm.js')
@@ -6,7 +6,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   var mangler     = require('mangler')
   var util        = require('util')
   var accountUtil = require('./accountUtil')
-  var bitcoinutil = require("bitcoinutil")(serverResponse.config.network)
+  var bitcoinutil = require("bitcoinutil")(config.network)
   var txutil      = require('./txutil')
   var account     = {}
   var positions, pnl, availableMargin, readonlyApp, ioconnected
@@ -15,14 +15,13 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   var promises = {}
   var band     = {}
 
-  account.loginless  = loginless
-  account.socket     = socket
-  account.config     = serverResponse.config
-  account.instruments = serverResponse.instruments
-  var instruments    = require('./instruments').init(account.instruments)
-  var validator      = require("./validator")
-  account.openOrders = {}
-  account.logging    = false
+  account.loginless   = loginless
+  account.config      = config
+  account.instruments = instrumentConfig
+  var instruments     = require('./instruments').init(account.instruments)
+  var validator       = require("./validator")
+  account.openOrders  = {}
+  account.logging     = false
 
   var multisigBalance, marginBalance
 
@@ -47,7 +46,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     }
   }
 
-  account.patchOrders = function (patch) {
+  account.patchOrders = function (symbol, patch) {
     var payload = []
     patch.cancels && patch.cancels.forEach(function (cancel) {
       payload.push({ op: 'remove', path: '/' + cancel.uuid })
@@ -66,31 +65,31 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     }
 
     if (payload.length === 0) return emptyPromise()
-    return promised(payload, "PATCH", "/order", function () {
+    return promised(symbol, payload, "PATCH", "/order", function () {
       logPatch(payload)
       if (patch.creates) validator.validateCreateOrder(account.instruments, patch.creates)
       if (patch.updates) validator.validateUpdateOrder(account.instruments, patch.updates, account.openOrders)
     })
   }
 
-  account.createOrders = function (orders) {
-    return promised(orders, "POST", "/order", function () {
+  account.createOrders = function (symbol, orders) {
+    return promised(symbol, orders, "POST", "/order", function () {
       logOrders(orders)
       validator.validateCreateOrder(account.instruments, orders)
       account.assertAvailableMargin(orders)
     })
   }
 
-  account.updateOrders = function (orders) {
-    return promised({ orders: orders }, "PUT", "/order", function () {
+  account.updateOrders = function (symbol, orders) {
+    return promised(symbol, { orders: orders }, "PUT", "/order", function () {
       logOrders(orders)
       validator.validateUpdateOrder(account.instruments, orders, account.openOrders)
       account.assertAvailableMargin(orders)
     })
   }
 
-  account.cancelOrder = function (order) {
-    return promised([order.uuid], "DELETE", "/order")
+  account.cancelOrder = function (symbol, order) {
+    return promised(symbol, [order.uuid], "DELETE", "/order")
   }
 
   account.cancelOrders = function (orders) {
@@ -99,12 +98,12 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     }))
   }
 
-  account.closeAll = function () {
-    return promised([], "DELETE", "/order")
+  account.closeAll = function (symbol) {
+    return promised(symbol, [], "DELETE", "/order")
   }
 
-  account.getClosedOrders = function (symbol, uuid) {
-    return promised([], "GET", "/closedorder" + (uuid ? uuid : "") + "?instrument=" + symbol)
+  account.getClosedOrders = function (symbol, uuid) {  //todo: needs rest call
+    return loginless.rest.get("/api/v1/contract/" + symbol + "/order/closed/" + (uuid ? uuid : ""))
   }
 
   account.transferToMargin = function (amountInSatoshi, feeInclusive) {
@@ -120,7 +119,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
           feeInclusive: feeInclusive
         })
       var signed = bitcoinutil.sign(tx, account.userPrivateKey, account.redeem, true)
-      return loginless.rest.post('/api/margin', { requestid: nodeUUID.v4() }, [{ txs: [signed] }])
+      return loginless.rest.post('/api/v1/margin', { requestid: nodeUUID.v4() }, [{ txs: [signed] }])
     })
   }
 
@@ -130,18 +129,18 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       var fee      = Math.floor(feeSatoshi)
       var tx       = txutil.createTx({ input: account.accountid, isMultisig: true, amount: amount, destination: address, unspents: unspents, txFee: fee })
       var signedTx = bitcoinutil.sign(tx, account.userPrivateKey, account.redeem, true)
-      return loginless.rest.post('/api/tx', {}, { tx: signedTx })
+      return loginless.rest.post('/api/v1/tx', {}, { tx: signedTx })
     })
   }
 
   account.recoveryTx = function () {
-    return loginless.rest.get('/api/withdrawtx').then(function (withdraw) {
+    return loginless.rest.get('/api/v1/withdrawtx').then(function (withdraw) {
       return bitcoinutil.sign(withdraw.tx, account.userPrivateKey, account.redeem)
     }).catch(handleError)
   }
 
   account.clearMargin = function () {
-    return loginless.rest.del("/api/margin").catch(handleError)
+    return loginless.rest.del("/api/v1/margin").catch(handleError)
   }
 
   account.updateAccountBalance = function () {
@@ -153,7 +152,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
   }
 
   account.getUserDetails = function () {
-    return loginless.rest.get("/api/userdetails").then(refreshWithUserDetails).catch(handleError)
+    return loginless.rest.get("/api/v1/userdetails").then(refreshWithUserDetails).catch(handleError)
   }
 
   account.getPositions = function () {
@@ -181,7 +180,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     try {
       if (readonlyApp == status.readonly) return
       if (status.readonly) return readonlyApp = status.readonly
-      loginless.socket.register(socket)
+      loginless.socket.register()
       account.getUserDetails().then(function () {
         readonlyApp = status.readonly
       })
@@ -195,7 +194,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
     try {
       if (!ioconnected) {
         ioconnected = true
-        loginless.socket.register(socket)
+        loginless.socket.register()
         account.getUserDetails()
       }
     } catch (e) {
@@ -210,7 +209,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   function onAuthError(message) {
     try {
-      loginless.socket.onAuthError(socket, message)
+      loginless.socket.onAuthError(message)
     } catch (e) {
       util.log(e);
       util.log(e.stack)
@@ -329,7 +328,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
 
   }
 
-  function promised(body, method, uri, fn) {
+  function promised(symbol, body, method, uri, fn) {
     var requestid = nodeUUID.v4()
     return new bluebird(function (resolve, reject) {
       if (fn) {
@@ -342,7 +341,7 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       }
       try {
         promises[requestid] = { resolve: resolve, reject: reject, time: Date.now() }
-        loginless.socket.send(socket, method, uri, { requestid: requestid }, body, {})
+        loginless.socket.send({ method: method, uri: uri, headers: { requestid: requestid }, body: body, params: { instrument: symbol } })
       } catch (e) {
         onError({ requestid: requestid, error: e })
       }
@@ -480,17 +479,16 @@ module.exports = function (serverResponse, loginless, socket, insightutil) {
       order_update    : onOrderUpdate,
       order_patch     : onOrderPatch,
       user_message    : onUserMessage,
-      ntp             : loginless.socket.ntp.bind(loginless.socket),
       auth_error      : onAuthError,
       priceband       : onPriceBand,
     }
 
     Object.keys(eventMap).forEach(function (event) {
-      socket.removeListener(event, eventMap[event])
-      socket.on(event, eventMap[event])
+      loginless.socket.removeListener(event, eventMap[event])
+      loginless.socket.on(event, eventMap[event])
 
     })
-    socket.emit('GET /state', "")
+    loginless.socket.emit('GET /state', "")
   }
 
   function addressListener(addressInfo) {
