@@ -5,18 +5,18 @@
     "result2"       : {
     },
     "serverResponse": {
-      "config": {
-        "default"    : {
-          "instrument": "test"
-        },
-        "network"    : "testnet"
+    },
+    "config"        : {
+      "default": {
+        "instrument": "test"
       },
-      "instruments":{
-          "test": {
-            "ticksperpoint": 10,
-            "type":"quanto"
-          }
-        }
+      "network": "testnet"
+    },
+    "instruments"   : {
+      "test": {
+        "ticksperpoint": 10,
+        "type"         : "quanto"
+      }
     }
   },
   "createOrders"                      : {
@@ -32,18 +32,18 @@
       "targetPrice": 1
     },
     "serverResponse": {
-      "config": {
-        "default"    : {
-          "instrument": "test"
-        },
-        "network"    : "testnet"
+    },
+    "config"        : {
+      "default": {
+        "instrument": "test"
       },
-      "instruments":{
-          "test": {
-            "ticksperpoint": 10,
-            "type":"quanto"
-          }
-        }
+      "network": "testnet"
+    },
+    "instruments"   : {
+      "test": {
+        "ticksperpoint": 10,
+        "type"         : "quanto"
+      }
     },
     "loginlessEvent": "order_add",
     "result"        : {
@@ -72,18 +72,18 @@
       "targetPrice": 1
     },
     "serverResponse": {
-      "config": {
-        "default"    : {
-          "instrument": "test"
-        },
-        "network"    : "testnet"
+    },
+    "config"        : {
+      "default": {
+        "instrument": "test"
       },
-      "instruments":{
-          "test": {
-            "ticksperpoint": 10,
-            "type":"quanto"
-          }
-        }
+      "network": "testnet"
+    },
+    "instruments"   : {
+      "test": {
+        "ticksperpoint": 10,
+        "type"         : "quanto"
+      }
     },
     "loginlessEvent": "order_error",
     "result"        : {
@@ -105,18 +105,18 @@
       "targetPrice": 1
     },
     "serverResponse": {
-      "config": {
-        "default"    : {
-          "instrument": "test"
-        },
-        "network"    : "testnet"
+    },
+    "config"        : {
+      "default": {
+        "instrument": "test"
       },
-      "instruments":{
-          "test": {
-            "ticksperpoint": 10,
-            "type":"quanto"
-          }
-        }
+      "network": "testnet"
+    },
+    "instruments"   : {
+      "test": {
+        "ticksperpoint": 10,
+        "type"         : "quanto"
+      }
     },
     "change"        : {
       "key"  : "price",
@@ -140,58 +140,58 @@
     "openOrders"    : {
       "test": {
         "uuid1": {
-          "uuid": "uuid1",
-          "instrument":"test"
+          "uuid"      : "uuid1",
+          "instrument": "test"
         },
         "uuid2": {
-          "uuid": "uuid2",
-          "instrument":"test"
+          "uuid"      : "uuid2",
+          "instrument": "test"
         },
         "uuid3": {
-          "uuid": "uuid3",
-          "instrument":"test"
+          "uuid"      : "uuid3",
+          "instrument": "test"
         }
       }
     },
     "orders"        : [
       {
-        "uuid"   : "uuid2",
-        "instrument":"test",
-        "updated": true
+        "uuid"      : "uuid2",
+        "instrument": "test",
+        "updated"   : true
       }, {
-        "created": true,
-        "instrument":"test"
+        "created"   : true,
+        "instrument": "test"
       }
     ],
     "serverResponse": {
-      "config": {
-        "default"    : {
-          "instrument": "test"
-        },
-        "network"    : "testnet"
+    },
+    "config"        : {
+      "default": {
+        "instrument": "test"
       },
-      "instruments":{
-          "test": {
-            "ticksperpoint": 10,
-            "type":"quanto"
-          }
-        }
+      "network": "testnet"
+    },
+    "instruments"   : {
+      "test": {
+        "ticksperpoint": 10,
+        "type"         : "quanto"
+      }
     },
     "result"        : {
       "orders": [
         {
-          "uuid": "uuid1",
-          "instrument":"test"
+          "uuid"      : "uuid1",
+          "instrument": "test"
         }, {
-          "uuid"   : "uuid2",
-          "instrument":"test",
-          "updated": true
+          "uuid"      : "uuid2",
+          "instrument": "test",
+          "updated"   : true
         }, {
-          "uuid": "uuid3",
-          "instrument":"test"
+          "uuid"      : "uuid3",
+          "instrument": "test"
         }, {
-          "instrument":"test",
-          "created": true
+          "instrument": "test",
+          "created"   : true
         }
       ]
     }
@@ -209,18 +209,18 @@
       "targetPrice": 1
     },
     "serverResponse": {
-      "config": {
-        "default"    : {
-          "instrument": "test"
-        },
-        "network"    : "testnet"
+    },
+    "config"        : {
+      "default": {
+        "instrument": "test"
       },
-      "instruments":{
-          "test": {
-            "ticksperpoint": 10,
-            "type":"quanto"
-          }
-        }
+      "network": "testnet"
+    },
+    "instruments"   : {
+      "test": {
+        "ticksperpoint": 10,
+        "type"         : "quanto"
+      }
     },
     "loginlessEvent": "order_error",
     "result"        : {

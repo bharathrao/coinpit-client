@@ -1,12 +1,13 @@
+var socket     = require("./socket.mock")
 module.exports = function (event, result) {
-  var loginless    = {}
-  loginless.socket = {
-    ntp : function () {
-    },
-    send: function (socket, method, uri, headers, body) {
-      socket.respond(event, { result: result, requestid: headers.requestid })
-    }
+  var loginless         = {}
+  loginless.socket      = socket
+  loginless.socket.ntp  = function () {
   }
+  loginless.socket.send = function (request) {
+    socket.respond(event, { result: result, requestid: request.headers.requestid })
+  }
+
   loginless.getAccount = function () {
     return {}
   }
