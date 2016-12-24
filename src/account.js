@@ -481,6 +481,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
       user_message    : onUserMessage,
       auth_error      : onAuthError,
       priceband       : onPriceBand,
+      instruments: updateInstruments
     }
 
     Object.keys(eventMap).forEach(function (event) {
@@ -489,6 +490,12 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
 
     })
     loginless.socket.emit('GET /state', "")
+  }
+
+  function updateInstruments(instrumentConfigs){
+    account.instruments = instrumentConfigs
+    instruments = require('./instruments').init(account.instruments)
+    return account.getUserDetails()
   }
 
   function addressListener(addressInfo) {
