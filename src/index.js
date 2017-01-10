@@ -1,11 +1,15 @@
-module.exports = function (coinpitUrl) {
-  // var socket   = require("socket.io-client")(coinpitUrl, { rejectUnauthorized: true })
-  var rest     = require('rest.js')
-  var bluebird = require('bluebird')
-  var util     = require('util')
+var rest     = require('rest.js')
+var bluebird = require('bluebird')
+var util     = require('util')
+var affirm   = require('affirm.js')
+
+module.exports = (function () {
   var client   = {}
 
-  client.getAccount = function (privKey) {
+  client.getAccount = function (privKey, coinpitUrl) {
+    affirm(privKey, 'private key required to create account')
+    affirm(coinpitUrl, 'coinpit base url required to create account')
+
     var config, loginless, instrumentConfig
 
     return rest.get(coinpitUrl + '/api/v1/config').then(function (response) {
@@ -39,4 +43,4 @@ module.exports = function (coinpitUrl) {
   }
 
   return client
-}
+})()

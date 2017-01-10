@@ -29,6 +29,10 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
     return _.cloneDeep(account.openOrders)
   }
 
+  account.getInstruments = function() {
+    return account.instruments
+  }
+
   account.getBidAsk = function () {
     return bidAsk
   }
@@ -438,6 +442,10 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
 
   account.calculateAvailableMarginIfCrossShifted = function (orders) {
     return accountUtil.computeAvailableMarginCoverageIfCrossShifted(orders, pnl, marginBalance.balance, band)
+  }
+
+  account.getMaxMargin = function() {
+    return account.calculateAvailableMarginIfCrossShifted(account.getOpenOrders())
   }
 
   function logPatch(payload) {
