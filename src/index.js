@@ -15,7 +15,7 @@ module.exports = (function () {
     return rest.get(coinpitUrl + '/api/v1/config').then(function (response) {
       config    = response.body.config
       instrumentConfig = response.body.instruments
-      loginless = createLoginless(config)
+      loginless = createLoginless()
       return loginless.getServerKey(privKey).then(createAccount).then(updateUserDetails)
     })
 
@@ -26,8 +26,8 @@ module.exports = (function () {
       })
     }
 
-    function createLoginless(config) {
-      return require("loginless")(coinpitUrl, "/api/v1/auth/", config.network, util.log.bind(util))
+    function createLoginless() {
+      return require("loginless")(coinpitUrl, "/api/v1")
     }
 
     function createAccount(serverResponse) {

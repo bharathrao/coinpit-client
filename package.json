@@ -32,11 +32,11 @@
     "bluebird": "^3.4.0",
     "insight-util": "~0.0.3",
     "lodash": "^4.13.1",
-    "loginless": "^2.0.1",
+    "loginless": "^3.0.2",
     "mangler": "^1.0.1",
-    "node-uuid": "^1.4.7",
     "rest.js": "~0.0.8",
-    "socket.io-client": "^1.4.6"
+    "socket.io-client": "^1.4.6",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "del": "^2.2.0",

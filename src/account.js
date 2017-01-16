@@ -1,6 +1,6 @@
 module.exports = function (serverResponse, loginless, insightutil, config, instrumentConfig) {
   var bluebird    = require('bluebird')
-  var nodeUUID    = require('node-uuid')
+  var nodeUUID    = require('uuid')
   var assert      = require('affirm.js')
   var _           = require('lodash')
   var mangler     = require('mangler')
@@ -107,7 +107,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
   }
 
   account.getClosedOrders = function (symbol, uuid) {  //todo: needs rest call
-    return loginless.rest.get("/api/v1/contract/" + symbol + "/order/closed/" + (uuid ? uuid : ""))
+    return loginless.rest.get("/contract/" + symbol + "/order/closed/" + (uuid ? uuid : ""))
   }
 
   account.transferToMargin = function (amountInSatoshi, feeInclusive) {
@@ -123,7 +123,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
           feeInclusive: feeInclusive
         })
       var signed = bitcoinutil.sign(tx, account.userPrivateKey, account.redeem, true)
-      return loginless.rest.post('/api/v1/margin', { requestid: nodeUUID.v4() }, [{ txs: [signed] }])
+      return loginless.rest.post('/margin', { requestid: nodeUUID.v4() }, [{ txs: [signed] }])
     })
   }
 
@@ -133,18 +133,18 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
       var fee      = Math.floor(feeSatoshi)
       var tx       = txutil.createTx({ input: account.accountid, isMultisig: true, amount: amount, destination: address, unspents: unspents, txFee: fee })
       var signedTx = bitcoinutil.sign(tx, account.userPrivateKey, account.redeem, true)
-      return loginless.rest.post('/api/v1/tx', {}, { tx: signedTx })
+      return loginless.rest.post('/tx', {}, { tx: signedTx })
     })
   }
 
   account.recoveryTx = function () {
-    return loginless.rest.get('/api/v1/withdrawtx').then(function (withdraw) {
+    return loginless.rest.get('/withdrawtx').then(function (withdraw) {
       return bitcoinutil.sign(withdraw.tx, account.userPrivateKey, account.redeem)
     }).catch(handleError)
   }
 
   account.clearMargin = function () {
-    return loginless.rest.del("/api/v1/margin").catch(handleError)
+    return loginless.rest.del("/margin").catch(handleError)
   }
 
   account.updateAccountBalance = function () {
@@ -156,7 +156,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
   }
 
   account.getUserDetails = function () {
-    return loginless.rest.get("/api/v1/userdetails").then(refreshWithUserDetails).catch(handleError)
+    return loginless.rest.get("/userdetails").then(refreshWithUserDetails).catch(handleError)
   }
 
   account.getPositions = function () {
@@ -461,8 +461,8 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
   }
 
   function copyFromLoginlessAccount() {
-    Object.keys(loginless.getAccount()).forEach(function (key) {
-      account[key] = loginless.getAccount()[key]
+    Object.keys(loginless.account).forEach(function (key) {
+      account[key] = loginless.account[key]
     })
   }
 
