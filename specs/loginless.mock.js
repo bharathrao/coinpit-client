@@ -8,8 +8,6 @@ module.exports = function (event, result) {
     socket.respond(event, { result: result, requestid: request.headers.requestid })
   }
 
-  loginless.getAccount = function () {
-    return {}
-  }
+  loginless.account = {}
   return loginless
 }
