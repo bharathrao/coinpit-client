@@ -2,44 +2,29 @@ var rest     = require('rest.js')
 var bluebird = require('bluebird')
 var util     = require('util')
 var affirm   = require('affirm.js')
+var InsightUtil = require('insight-util')
 
 module.exports = (function () {
-  var client   = {}
+  var client = {}
 
   client.getAccount = function (privKey, coinpitUrl) {
     affirm(privKey, 'private key required to create account')
     affirm(coinpitUrl, 'coinpit base url required to create account')
-
-    var config, loginless, instrumentConfig
-
-    return rest.get(coinpitUrl + '/api/v1/config').then(function (response) {
-      config    = response.body.config
-      instrumentConfig = response.body.instruments
-      loginless = createLoginless()
-      return loginless.getServerKey(privKey).then(createAccount).then(updateUserDetails)
-    })
-
-    function updateUserDetails(account) {
-      var promises = bluebird.all([account.getUserDetails(), account.updateAccountBalance()])
-      return promises.then(function (response) {
-        return account
+    var loginless = require("loginless")(coinpitUrl, "/api/v1")
+    return loginless.getServerKey(privKey)
+      .then(function getConfigs(result) {
+        return loginless.rest.get('/all/config')
       })
-    }
-
-    function createLoginless() {
-      return require("loginless")(coinpitUrl, "/api/v1")
-    }
-
-    function createAccount(serverResponse) {
-      loginless.socket.register()
-      var insightUtil = getInsightUtil()
-      return require("./account")(serverResponse, loginless, insightUtil, config, instrumentConfig)
-    }
-
-    function getInsightUtil() {
-      return require('insight-util')(config.blockchainapi.uri, config.blockchainapi.socketuri, config.network)
-    }
-
+      .then(function createAccount(configs) {
+        loginless.socket.register()
+        return require("./account")(loginless, configs)
+      })
+      .then(function updateUserDetails(account) {
+        var promises = bluebird.all([account.getUserDetails(), account.updateAccountBalance()])
+        return promises.then(function (response) {
+          return account
+        })
+      })
   }
 
   return client

@@ -1,4 +1,21 @@
 {
+  "configs"                           : {
+    "config"     : {
+      "default": {
+        "instrument": "test"
+      },
+      "blockchainapi":{
+        "uri":"someuri"
+      },
+      "network": "testnet"
+    },
+    "instruments": {
+      "test": {
+        "ticksperpoint": 10,
+        "type"         : "quanto"
+      }
+    }
+  },
   "closedOrders"                      : {
     "result1"       : {
     },
@@ -33,18 +50,6 @@
     },
     "serverResponse": {
     },
-    "config"        : {
-      "default": {
-        "instrument": "test"
-      },
-      "network": "testnet"
-    },
-    "instruments"   : {
-      "test": {
-        "ticksperpoint": 10,
-        "type"         : "quanto"
-      }
-    },
     "loginlessEvent": "order_add",
     "result"        : {
       "uuid"       : "9d087536-eb01-11e5-a77a-7e7ae8165098",
@@ -73,18 +78,6 @@
     },
     "serverResponse": {
     },
-    "config"        : {
-      "default": {
-        "instrument": "test"
-      },
-      "network": "testnet"
-    },
-    "instruments"   : {
-      "test": {
-        "ticksperpoint": 10,
-        "type"         : "quanto"
-      }
-    },
     "loginlessEvent": "order_error",
     "result"        : {
       "error": {
@@ -105,18 +98,6 @@
       "targetPrice": 1
     },
     "serverResponse": {
-    },
-    "config"        : {
-      "default": {
-        "instrument": "test"
-      },
-      "network": "testnet"
-    },
-    "instruments"   : {
-      "test": {
-        "ticksperpoint": 10,
-        "type"         : "quanto"
-      }
     },
     "change"        : {
       "key"  : "price",
@@ -165,18 +146,6 @@
     ],
     "serverResponse": {
     },
-    "config"        : {
-      "default": {
-        "instrument": "test"
-      },
-      "network": "testnet"
-    },
-    "instruments"   : {
-      "test": {
-        "ticksperpoint": 10,
-        "type"         : "quanto"
-      }
-    },
     "result"        : {
       "orders": [
         {
@@ -209,18 +178,6 @@
       "targetPrice": 1
     },
     "serverResponse": {
-    },
-    "config"        : {
-      "default": {
-        "instrument": "test"
-      },
-      "network": "testnet"
-    },
-    "instruments"   : {
-      "test": {
-        "ticksperpoint": 10,
-        "type"         : "quanto"
-      }
     },
     "loginlessEvent": "order_error",
     "result"        : {

@@ -1,23 +1,24 @@
-module.exports = function (serverResponse, loginless, insightutil, config, instrumentConfig) {
+module.exports = function (loginless, configs) {
   var bluebird    = require('bluebird')
   var nodeUUID    = require('uuid')
   var assert      = require('affirm.js')
   var _           = require('lodash')
   var mangler     = require('mangler')
   var util        = require('util')
+  var InsightUtil = require('insight-util')
   var accountUtil = require('./accountUtil')
-  var bitcoinutil = require("bitcoinutil")(config.network)
+  var bitcoinutil = require("bitcoinutil")
   var txutil      = require('./txutil')
   var account     = {}
   var positions, pnl, availableMargin, readonlyApp, ioconnected
   var bidAsk      = {}
 
-  var promises = {}
-  var band     = {}
-
+  var promises        = {}
+  var band            = {}
   account.loginless   = loginless
-  account.config      = config
-  account.instruments = instrumentConfig
+  account.config      = configs.config
+  account.instruments = configs.instruments
+  account.insightUtil = InsightUtil(account.config.blockchainapi.uri)
   var instruments     = require('./instruments').init(account.instruments)
   var validator       = require("./validator")
   account.openOrders  = {}
@@ -29,7 +30,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
     return _.cloneDeep(account.openOrders)
   }
 
-  account.getInstruments = function() {
+  account.getInstruments = function () {
     return account.instruments
   }
 
@@ -111,7 +112,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
   }
 
   account.transferToMargin = function (amountInSatoshi, feeInclusive) {
-    return insightutil.getConfirmedUnspents(multisigBalance.address).then(function (confirmedUnspents) {
+    return account.insightUtil.getConfirmedUnspents(multisigBalance.address).then(function (confirmedUnspents) {
       var tx     = txutil.createTx(
         {
           input       : multisigBalance.address,
@@ -128,7 +129,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
   }
 
   account.withdraw = function (address, amountSatoshi, feeSatoshi) {
-    return insightutil.getConfirmedUnspents(account.accountid).then(function (unspents) {
+    return account.insightUtil.getConfirmedUnspents(account.accountid).then(function (unspents) {
       var amount   = Math.floor(amountSatoshi)
       var fee      = Math.floor(feeSatoshi)
       var tx       = txutil.createTx({ input: account.accountid, isMultisig: true, amount: amount, destination: address, unspents: unspents, txFee: fee })
@@ -148,7 +149,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
   }
 
   account.updateAccountBalance = function () {
-    return bluebird.all([insightutil.getAddress(account.serverAddress), insightutil.getAddress(account.accountid)])
+    return bluebird.all([account.insightUtil.getAddress(account.serverAddress), account.insightUtil.getAddress(account.accountid)])
       .then(function (balances) {
         addressListener(balances[0])
         addressListener(balances[1])
@@ -156,7 +157,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
   }
 
   account.getUserDetails = function () {
-    return loginless.rest.get("/userdetails").then(refreshWithUserDetails).catch(handleError)
+    return loginless.rest.get("/account/userdetails").then(refreshWithUserDetails).catch(handleError)
   }
 
   account.getPositions = function () {
@@ -444,7 +445,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
     return accountUtil.computeAvailableMarginCoverageIfCrossShifted(orders, pnl, marginBalance.balance, band)
   }
 
-  account.getMaxMargin = function() {
+  account.getMaxMargin = function () {
     return account.calculateAvailableMarginIfCrossShifted(account.getOpenOrders())
   }
 
@@ -489,7 +490,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
       user_message    : onUserMessage,
       auth_error      : onAuthError,
       priceband       : onPriceBand,
-      instruments: updateInstruments
+      instruments     : updateInstruments
     }
 
     Object.keys(eventMap).forEach(function (event) {
@@ -500,9 +501,9 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
     loginless.socket.emit('GET /state', "")
   }
 
-  function updateInstruments(instrumentConfigs){
+  function updateInstruments(instrumentConfigs) {
     account.instruments = instrumentConfigs
-    instruments = require('./instruments').init(account.instruments)
+    instruments         = require('./instruments').init(account.instruments)
     return account.getUserDetails()
   }
 
@@ -516,7 +517,7 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
         marginBalance = addressInfo
         break
       default:
-        insightutil.unsubscribe(addressInfo.address)
+        account.insightUtil.unsubscribe(addressInfo.address)
     }
   }
 
@@ -527,8 +528,8 @@ module.exports = function (serverResponse, loginless, insightutil, config, instr
   function init() {
     setupSocketEvents()
     copyFromLoginlessAccount()
-    insightutil.subscribe(account.accountid, addressListener)
-    insightutil.subscribe(account.serverAddress, addressListener)
+    account.insightUtil.subscribe(account.accountid, addressListener)
+    account.insightUtil.subscribe(account.serverAddress, addressListener)
   }
 
   function emptyPromise() {
