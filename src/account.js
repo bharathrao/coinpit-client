@@ -487,7 +487,7 @@ module.exports = function (loginless, configs) {
       orders_del      : onFlat,
       order_update    : onOrderUpdate,
       order_patch     : onOrderPatch,
-      user_message    : onUserMessage,
+      account         : onUserMessage,
       auth_error      : onAuthError,
       priceband       : onPriceBand,
       instruments     : updateInstruments
