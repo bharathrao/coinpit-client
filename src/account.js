@@ -530,7 +530,7 @@ module.exports = function (loginless, configs) {
     copyFromLoginlessAccount()
     account.insightUtil.subscribe(account.accountid, addressListener)
     account.insightUtil.subscribe(account.serverAddress, addressListener)
-    setInterval(timeoutPromises, 10000)
+    setInterval(timeoutPromises, 1000)
   }
 
   function emptyPromise() {
@@ -543,7 +543,7 @@ module.exports = function (loginless, configs) {
     try {
       Object.keys(promises).forEach(function (requestid) {
         var promise = promises[requestid]
-        if ((Date.now() - promise.time) > 60000){
+        if ((Date.now() - promise.time) > 10000){
           onError({ requestid: requestid, error: 'Request Timed Out for ' + requestid })
           util.log('timeoutPromises: promise removed for' , requestid , 'after ', (Date.now() - promise.time), 'ms')
         }
