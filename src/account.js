@@ -157,7 +157,7 @@ module.exports = function (loginless, configs) {
   }
 
   account.getUserDetails = function () {
-    return loginless.rest.get("/account/userdetails").then(refreshWithUserDetails).catch(handleError)
+    return loginless.rest.get("/account").then(refreshWithUserDetails).catch(handleError)
   }
 
   account.getPositions = function () {
@@ -530,12 +530,27 @@ module.exports = function (loginless, configs) {
     copyFromLoginlessAccount()
     account.insightUtil.subscribe(account.accountid, addressListener)
     account.insightUtil.subscribe(account.serverAddress, addressListener)
+    setInterval(timeoutPromises, 10000)
   }
 
   function emptyPromise() {
     return new bluebird(function (resolve, reject) {
       return resolve()
     })
+  }
+
+  function timeoutPromises() {
+    try {
+      Object.keys(promises).forEach(function (requestid) {
+        var promise = promises[requestid]
+        if ((Date.now() - promise.time) > 60000){
+          onError({ requestid: requestid, error: 'Request Timed Out for ' + requestid })
+          util.log('timeoutPromises: promise removed for' , requestid , 'after ', (Date.now() - promise.time), 'ms')
+        }
+      })
+    } catch (e) {
+      util.log('ERROR: timeout promises', e.stack)
+    }
   }
 
   init()

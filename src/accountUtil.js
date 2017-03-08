@@ -26,11 +26,27 @@ module.exports = (function () {
       Object.keys(orders[symbol]).forEach(function (uuid) {
         var order = orders[symbol][uuid]
         marginUsedByOrders += instrument.calculateMarginRequiredByOrder(order, bands, afterAdjustingCross)
+        marginUsedByOrders += accUtil.getCommission(order, instrument)
       })
     })
     availableMargin -= marginUsedByOrders
     availableMargin += profitAndLoss && profitAndLoss.pnl || 0
+    // availableMargin -= accUtil.getCommissionForOpenPositions(positions)
     return availableMargin
+  }
+
+  accUtil.getCommission = function (order, instrument) {
+    affirm(order, 'Order undefined')
+    affirm(instrument, 'Instrument undefined')
+    if (order.orderType !== 'STP') return 0
+    affirm(order.entryAmount, 'Entry Amount is not set')
+    var quantity       = order.quantity - (order.filled || 0) - (order.cancelled || 0)
+    var commissionRate = instrument.config.commission
+    affirm(!isNaN(commissionRate), 'invalid commission rate ' + JSON.stringify(instrument))
+    var commission     = commissionRate > -1 && commissionRate <= 1 ?
+                         Math.round(order.entryAmount * commissionRate) :
+                         quantity * commissionRate;
+    return Math.round(commission * 1.5)
   }
 
   return accUtil
