@@ -65,8 +65,8 @@ module.exports = function (loginless, configs) {
     if (patch.merge && patch.merge.length > 0) {
       payload.push({ op: 'merge', path: "", from: patch.merge })
     }
-    if (patch.split && patch.split.length > 0) {
-      payload.push({ op: 'split', path: "", from: patch.uuid, quantity: patch.quantity })
+    if (patch.split) {
+      payload.push({ op: 'split', path: "", from: patch.split.uuid, quantity: patch.split.quantity })
     }
 
     if (payload.length === 0) return emptyPromise()
