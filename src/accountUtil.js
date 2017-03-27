@@ -1,38 +1,52 @@
-var affirm = require('affirm.js')
+var affirm      = require('affirm.js')
+var mangler     = require('mangler')
+var instruments = require('./instruments')
 
 module.exports = (function () {
   var accUtil    = {}
   var marginSide = { "buy": -1, "sell": 1 }
 
-  accUtil.computeAvailableMarginCoverage = function (orders, profitAndLoss, instrument, availableMargin) {
-    affirm(orders && Array.isArray(orders), 'Orders array of size >= 0 required')
-    affirm(!profitAndLoss || (typeof profitAndLoss.pnl === 'number'), 'invalid Profit and loss ' + JSON.stringify(profitAndLoss))
-    affirm(typeof availableMargin === 'number', 'Invalid margin balance' + availableMargin)
-    affirm(instrument, 'Instrument not specified for computing margin')
-
-    var marginPointsUsedByOrders = 0
-    orders.forEach(function (order) {
-      marginPointsUsedByOrders += accUtil.getMarginPointsUsedByOrder(order, instrument)
-    })
-    availableMargin -= marginPointsUsedByOrders * instrument.ticksperpoint * instrument.tickvalue
-    availableMargin += profitAndLoss && profitAndLoss.pnl || 0
-    return Math.round(availableMargin)
+  accUtil.computeAvailableMarginCoverageIfCrossShifted = function (orders, profitAndLoss, availableMargin, bands) {
+    return accUtil.computeAvailableMargin(orders, profitAndLoss, availableMargin, bands, true)
   }
 
-  accUtil.getMarginPointsUsedByOrder = function (order, instrument) {
-    if (order.orderType === "TGT")  return 0
+  accUtil.computeAvailableMarginCoverage = function (orders, profitAndLoss, availableMargin, bands) {
+    return accUtil.computeAvailableMargin(orders, profitAndLoss, availableMargin, bands)
+  }
 
-    var quantity = order.quantity - (order.filled || 0) - (order.cancelled || 0)
-    var cushion  = order.cushion || instrument.stopcushion
+  accUtil.computeAvailableMargin = function (orders, profitAndLoss, availableMargin, bands, afterAdjustingCross) {
+    affirm(orders, 'Orders not present')
+    affirm(!profitAndLoss || (typeof profitAndLoss.pnl === 'number'), 'invalid Profit and loss ' + JSON.stringify(profitAndLoss))
+    affirm(typeof availableMargin === 'number', 'Invalid margin balance ' + availableMargin)
+    affirm(Object.keys(bands), 'Invalid marketBuys')
 
-    if (order.orderType === "STP") {
-      var entryAmount = order.entryAmount || order.executionPrice * quantity
-      // var executionPrice    = order.executionPrice
-      var exitAmount = order.price * quantity
-      return marginSide[order.side] * (entryAmount - exitAmount) + cushion * quantity
-    }
+    var marginUsedByOrders = 0
+    Object.keys(orders).forEach(function (symbol) {
+      var instrument = instruments[symbol]
+      Object.keys(orders[symbol]).forEach(function (uuid) {
+        var order = orders[symbol][uuid]
+        marginUsedByOrders += instrument.calculateMarginRequiredByOrder(order, bands, afterAdjustingCross)
+        marginUsedByOrders += accUtil.getCommission(order, instrument)
+      })
+    })
+    availableMargin -= marginUsedByOrders
+    availableMargin += profitAndLoss && profitAndLoss.pnl || 0
+    // availableMargin -= accUtil.getCommissionForOpenPositions(positions)
+    return availableMargin
+  }
 
-    return quantity * (order.stopPrice + cushion )
+  accUtil.getCommission = function (order, instrument) {
+    affirm(order, 'Order undefined')
+    affirm(instrument, 'Instrument undefined')
+    if (order.orderType !== 'STP') return 0
+    affirm(order.entryAmount, 'Entry Amount is not set')
+    var quantity       = order.quantity - (order.filled || 0) - (order.cancelled || 0)
+    var commissionRate = instrument.config.commission
+    affirm(!isNaN(commissionRate), 'invalid commission rate ' + JSON.stringify(instrument))
+    var commission     = commissionRate > -1 && commissionRate <= 1 ?
+                         Math.round(order.entryAmount * commissionRate) :
+                         quantity * commissionRate;
+    return Math.round(commission * 1.5)
   }
 
   return accUtil

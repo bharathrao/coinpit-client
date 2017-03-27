@@ -1,38 +1,49 @@
 var expect      = require('expect.js')
-var fixtures    = require('fixtures.js')(__filename)
+var fixtures    = require('./fixtures/account.spec.json')
 var Account     = require("../src/account")
 var Loginless   = require("./loginless.mock")
-var socket      = require("./socket.mock")
 var util        = require('../src/util')
 var accountUtil = require('../src/accountUtil')
 var assert      = require("affirm.js")
-var insighteUtil = {subscribe: nop, unsubscribe: nop}
+var _           = require('lodash')
+var mock        = require('mock-require')
+
 require('mocha-generators').install()
 
 describe('account test', function () {
+  before(function () {
+    mock('insight-util', function () {
+      return { subscribe: nop, unsubscribe: nop }
+    })
+  })
+  after(mock.stopAll)
 
   it('createOrders', function*() {
     var test      = fixtures.createOrders
     var loginless = Loginless(test.loginlessEvent, [test.result])
-    var account   = Account(test.serverResponse, loginless, socket, insighteUtil)
 
-    account.assertAvailableMargin    = nop
-    account.calculateAvailableMargin = nop
+    var account = Account(loginless, fixtures.configs)
+    // account.insightUtil = insighteUtil
 
-    var created = yield account.createOrders([test.order])
+    account.assertAvailableMargin                  = nop
+    account.calculateAvailableMarginIfCrossShifted = nop
+
+    var symbol  = fixtures.configs.config.default.instrument
+    var created = yield account.createOrders(symbol, [test.order])
     expect(created).to.eql([test.result])
-    expect(Object.keys(account.openOrders)).to.eql([test.result.uuid])
+    expect(Object.keys(account.openOrders[symbol])).to.eql([test.result.uuid])
   })
 
   it('fail createOrders', function*() {
-    var test      = fixtures.createOrdersFail
-    var loginless = Loginless(test.loginlessEvent, test.result)
-    var account   = Account(test.serverResponse, loginless, socket, insighteUtil)
-
-    account.assertAvailableMargin    = nop
-    account.calculateAvailableMargin = nop
+    var test                                       = fixtures.createOrdersFail
+    var loginless                                  = Loginless(test.loginlessEvent, test.result)
+    var account                                    = Account(loginless, fixtures.configs)
+    // account.insightUtil                            = insighteUtil
+    account.assertAvailableMargin                  = nop
+    account.calculateAvailableMarginIfCrossShifted = nop
     try {
-      yield account.createOrders([test.order])
+      var symbol = fixtures.configs.config.default.instrument
+      yield account.createOrders(symbol, [test.order])
       expect().fail("Exception was expected, but was successful")
     } catch (e) {
       expect(e).to.be.eql(test.result.message)
@@ -41,55 +52,61 @@ describe('account test', function () {
   })
 
   it('updateOrders', function*() {
-    var test      = fixtures.updateOrders
-    var loginless = Loginless(test.loginlessEvent, [test.result])
-    var account   = Account(test.serverResponse, loginless, socket, insighteUtil)
-
-    account.assertAvailableMargin       = nop
-    account.calculateAvailableMargin    = nop
-    account.openOrders[test.order.uuid] = test.order
+    var test                                       = fixtures.updateOrders
+    var loginless                                  = Loginless(test.loginlessEvent, [test.result])
+    var account                                    = Account(loginless, fixtures.configs)
+    // account.insightUtil                            = insighteUtil
+    account.assertAvailableMargin                  = nop
+    account.calculateAvailableMarginIfCrossShifted = nop
+    var symbol                                     = fixtures.configs.config.default.instrument
+    account.openOrders[symbol]                     = account.openOrders[symbol] || {}
+    account.openOrders[symbol][test.order.uuid]    = test.order
 
     var updated              = util.clone(test.order)
     updated[test.change.key] = test.change.value
-    var created              = yield account.updateOrders([updated])
+
+    var created = yield account.updateOrders(symbol, [updated])
     expect(created).to.eql([test.result])
-    expect(account.openOrders[test.result.uuid].price).to.eql(test.result.price)
+    expect(account.openOrders[symbol][test.result.uuid].price).to.eql(test.result.price)
   })
 
   it.skip('closedOrders', function*() {
-    var test      = fixtures.closedOrders
-    var loginless = Loginless()
-    var account   = Account(test.serverResponse, loginless, socket, insighteUtil)
-
-    account.assertAvailableMargin    = nop
-    account.calculateAvailableMargin = nop
-    var closedOrders1 = yield account.closedOrders(undefined, 1)
+    var test                                       = fixtures.closedOrders
+    var loginless                                  = Loginless()
+    var account                                    = Account(loginless, fixtures.configs)
+    // account.insightUtil                            = insighteUtil
+    account.assertAvailableMargin                  = nop
+    account.calculateAvailableMarginIfCrossShifted = nop
+    var closedOrders1                              = yield account.closedOrders(undefined, 1)
     expect(closedOrders1).to.eql(test.result1)
     var closedOrders2 = yield account.closedOrders(closedOrders1[0], 1)
     expect(closedOrders2).to.eql(test.result2)
   })
 
   it('assertAvailableMargin', function*() {
-    var test                         = fixtures.assertAvailableMargin
-    var loginless                    = Loginless()
-    var account                      = Account(test.serverResponse, loginless, socket, insighteUtil)
-    account.calculateAvailableMargin = function (orders) {
-      expect(orders).to.eql(test.result.orders)
+    var test                                       = fixtures.assertAvailableMargin
+    var loginless                                  = Loginless()
+    var account                                    = Account(loginless, fixtures.configs)
+    // account.insightUtil                            = insighteUtil
+    account.calculateAvailableMarginIfCrossShifted = function (orders) {
+      expect(_.toArray(orders[fixtures.configs.config.default.instrument])).to.eql(test.result.orders)
     }
-    account.openOrders               = test.openOrders
+    account.openOrders                             = test.openOrders
     account.getPostAvailableMargin(test.orders)
   })
 
   it('create Orders with insufficient margin', function*() {
     var test                         = fixtures.createOrdersWithInsufficientMargin
     var loginless                    = Loginless()
-    var account                      = Account(test.serverResponse, loginless, socket, insighteUtil)
+    var account                      = Account(loginless, fixtures.configs)
+    // account.insightUtil              = insighteUtil
+    var symbol                       = fixtures.configs.config.default.instrument
     account.assertAvailableMargin    = function () {
       assert(false, test.result.message)
     }
     account.calculateAvailableMargin = nop
     try {
-      yield account.createOrders([test.order])
+      yield account.createOrders(symbol, [test.order])
       expect().fail("Exception was expected, but was successful")
     } catch (e) {
       expect(e.message).to.be.eql(test.result.message)

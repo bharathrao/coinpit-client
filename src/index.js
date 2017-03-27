@@ -1,41 +1,31 @@
-module.exports = function (coinpitUrl) {
-  var socket = require("socket.io-client")(coinpitUrl, { rejectUnauthorized: true })
-  var rest   = require('rest.js')
-  var bluebird = require('bluebird')
-  var util = require('util')
+var rest     = require('rest.js')
+var bluebird = require('bluebird')
+var util     = require('util')
+var affirm   = require('affirm.js')
+var InsightUtil = require('insight-util')
+
+module.exports = (function () {
   var client = {}
 
-  client.getAccount = function (privKey) {
-    var config, loginless
-
-    return rest.get(coinpitUrl + '/api/config').then(function (response) {
-      config    = response.body
-      loginless = createLoginless(config)
-      return loginless.getServerKey(privKey).then(createAccount).then(updateUserDetails)
-    })
-
-    function updateUserDetails(account) {
-      var promises = bluebird.all([account.getUserDetails(), account.updateAccountBalance()])
-      return promises.then(function (response) {
-        return account
+  client.getAccount = function (privKey, coinpitUrl) {
+    affirm(privKey, 'private key required to create account')
+    affirm(coinpitUrl, 'coinpit base url required to create account')
+    var loginless = require("loginless")(coinpitUrl, "/api/v1")
+    return loginless.getServerKey(privKey)
+      .then(function getConfigs(result) {
+        return loginless.rest.get('/all/config')
       })
-    }
-
-    function createLoginless(config) {
-      return require("loginless")(coinpitUrl, "/api/auth/", config.network, util.log.bind(util))
-    }
-
-    function createAccount(serverResponse) {
-      loginless.socket.register(socket)
-      var insightUtil = getInsightUtil()
-      return require("./account")(serverResponse, loginless, socket, insightUtil)
-    }
-
-    function getInsightUtil() {
-      return require('insight-util')(config.blockchainapi.uri, config.blockchainapi.socketuri, config.network)
-    }
-
+      .then(function createAccount(configs) {
+        loginless.socket.register()
+        return require("./account")(loginless, configs)
+      })
+      .then(function updateUserDetails(account) {
+        var promises = bluebird.all([account.getUserDetails(), account.updateAccountBalance()])
+        return promises.then(function (response) {
+          return account
+        })
+      })
   }
 
   return client
-}
+})()
