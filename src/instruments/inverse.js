@@ -38,7 +38,7 @@ module.exports = function (config) {
     var cushion      = getCushion(order)
     var stopPrice    = order.normalizedEntryPrice + stopSign * (config.crossMarginInitialStop + cushion)
     var btcStopPrice = instrument.getNormalizedPrice(stopPrice)
-    return Math.abs(order.entryPrice - btcStopPrice * quantity)
+    return Math.abs(order.entryAmount - btcStopPrice * quantity)
   }
 
   function getCushion(order) {

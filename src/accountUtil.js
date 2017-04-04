@@ -46,7 +46,7 @@ module.exports = (function () {
     var commission     = commissionRate > -1 && commissionRate <= 1 ?
                          Math.round(order.entryAmount * commissionRate) :
                          quantity * commissionRate;
-    return Math.round(commission * 1.5)
+    return Math.round(commission)
   }
 
   return accUtil
