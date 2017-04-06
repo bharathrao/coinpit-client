@@ -416,6 +416,7 @@ module.exports = function (loginless, configs) {
     positions          = userDetails.positions
     pnl                = userDetails.pnl
     availableMargin    = userDetails.margin
+    return userDetails
   }
 
   account.assertAvailableMargin = function (orders) {
