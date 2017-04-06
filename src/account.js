@@ -158,7 +158,7 @@ module.exports = function (loginless, configs) {
       })
   }
 
-  account.getUserDetails = function () {
+  account.getAll = function () {
     return loginless.rest.get("/account").then(refreshWithUserDetails).catch(handleError)
   }
 
@@ -188,7 +188,7 @@ module.exports = function (loginless, configs) {
       if (readonlyApp == status.readonly) return
       if (status.readonly) return (readonlyApp = status.readonly)
       loginless.socket.register()
-      account.getUserDetails().then(function () {
+      account.getAll().then(function () {
         readonlyApp = status.readonly
       })
     } catch (e) {
@@ -202,7 +202,7 @@ module.exports = function (loginless, configs) {
       if (!ioconnected) {
         ioconnected = true
         loginless.socket.register()
-        account.getUserDetails()
+        account.getAll()
       }
     } catch (e) {
       util.log(e);
@@ -294,7 +294,7 @@ module.exports = function (loginless, configs) {
 
   function onFlat(response) {
     try {
-      account.getUserDetails().then(function () {
+      account.getAll().then(function () {
         respondSuccess(response.requestid, _.cloneDeep(account.openOrders))
       })
     } catch (e) {
@@ -506,7 +506,7 @@ module.exports = function (loginless, configs) {
   function updateInstruments(instrumentConfigs) {
     account.instruments = instrumentConfigs
     instruments         = require('./instruments').init(account.instruments)
-    return account.getUserDetails()
+    return account.getAll()
   }
 
   function addressListener(addressInfo) {
