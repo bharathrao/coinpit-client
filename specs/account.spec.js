@@ -3,14 +3,13 @@ var fixtures    = require('./fixtures/account.spec.json')
 var Account     = require("../src/account")
 var Loginless   = require("./loginless.mock")
 var util        = require('../src/util')
-var accountUtil = require('../src/accountUtil')
 var assert      = require("affirm.js")
 var _           = require('lodash')
 var mock        = require('mock-require')
 
 require('mocha-generators').install()
 
-describe('account test', function () {
+describe.skip('account test', function () {
   before(function () {
     mock('insight-util', function () {
       return { subscribe: nop, unsubscribe: nop }
@@ -18,7 +17,7 @@ describe('account test', function () {
   })
   after(mock.stopAll)
 
-  it('createOrders', function*() {
+  it('should be able to create orders', function*() {
     var test      = fixtures.createOrders
     var loginless = Loginless(test.loginlessEvent, [test.result])
 

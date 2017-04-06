@@ -30,7 +30,7 @@ module.exports = (function () {
   }
 
   function inferUrlFromPrivateKey(key) {
-    return key[0] === 'K' || key[0] == 'L' ? "https://live.coinpit.io" : "https://live.coinpit.me"
+    return key[0] === 'K' || key[0] === 'L' ? "https://live.coinpit.io" : "https://live.coinpit.me"
   }
 
   return client

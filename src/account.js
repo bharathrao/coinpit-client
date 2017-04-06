@@ -6,7 +6,7 @@ module.exports = function (loginless, configs) {
   var mangler     = require('mangler')
   var util        = require('util')
   var InsightUtil = require('insight-util')
-  var accountUtil = require('./accountUtil')
+  var marginUtil  = require('coinpit-common/marginUtil')
   var bitcoinutil = require("bitcoinutil")
   var txutil      = require('./txutil')
   var account     = {}
@@ -19,10 +19,10 @@ module.exports = function (loginless, configs) {
   account.config      = configs.config
   account.instruments = configs.instruments
   account.insightUtil = InsightUtil(account.config.blockchainapi.uri)
-  var instruments     = require('./instruments').init(account.instruments)
-  var validator       = require("./validator")
-  account.openOrders  = {}
-  account.logging     = false
+  require('coinpit-common/instruments').init(account.instruments)
+  var validator      = require("./validator")
+  account.openOrders = {}
+  account.logging    = false
 
   var multisigBalance, marginBalance
 
@@ -185,7 +185,7 @@ module.exports = function (loginless, configs) {
 
   function onReadOnly(status) {
     try {
-      if (readonlyApp == status.readonly) return
+      if (readonlyApp === status.readonly) return
       if (status.readonly) return (readonlyApp = status.readonly)
       loginless.socket.register()
       account.getAll().then(function () {
@@ -335,12 +335,12 @@ module.exports = function (loginless, configs) {
 
   }
 
-  function promised(symbol, body, method, uri, fn) {
+  function promised(symbol, body, method, uri, preProcess) {
     var requestid = nodeUUID.v4()
     return new bluebird(function (resolve, reject) {
-      if (fn) {
+      if (preProcess) {
         try {
-          fn()
+          preProcess()
         } catch (e) {
           reject(e)
           return
@@ -441,16 +441,18 @@ module.exports = function (loginless, configs) {
   }
 
   account.calculateAvailableMargin = function (orders) {
-    return accountUtil.computeAvailableMarginCoverage(orders, pnl, marginBalance.balance, band)
+    return marginUtil.getMaxCrossStopMargin(orders, pnl, positions, marginBalance.balance, band)
   }
 
   account.calculateAvailableMarginIfCrossShifted = function (orders) {
-    return accountUtil.computeAvailableMarginCoverageIfCrossShifted(orders, pnl, marginBalance.balance, band)
+    return marginUtil.getMinCrossStopMargin(orders, pnl, positions, marginBalance.balance, band)
   }
 
+/*
   account.getMaxMargin = function () {
     return account.calculateAvailableMarginIfCrossShifted(account.getOpenOrders())
   }
+*/
 
   function logPatch(payload) {
     if (!account.logging) return
@@ -506,7 +508,7 @@ module.exports = function (loginless, configs) {
 
   function updateInstruments(instrumentConfigs) {
     account.instruments = instrumentConfigs
-    instruments         = require('./instruments').init(account.instruments)
+    require('coinpit-common/instruments').init(account.instruments)
     return account.getAll()
   }
 
@@ -546,9 +548,9 @@ module.exports = function (loginless, configs) {
     try {
       Object.keys(promises).forEach(function (requestid) {
         var promise = promises[requestid]
-        if ((Date.now() - promise.time) > 10000){
+        if ((Date.now() - promise.time) > 10000) {
           onError({ requestid: requestid, error: 'Request Timed Out for ' + requestid })
-          util.log('timeoutPromises: promise removed for' , requestid , 'after ', (Date.now() - promise.time), 'ms')
+          util.log('timeoutPromises: promise removed for', requestid, 'after ', (Date.now() - promise.time), 'ms')
         }
       })
     } catch (e) {
