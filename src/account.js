@@ -53,9 +53,11 @@ module.exports = function (loginless, configs) {
 
   account.patchOrders = function (symbol, patch) {
     var payload = []
-    patch.cancels && patch.cancels.forEach(function (cancel) {
-      payload.push({ op: 'remove', path: '/' + cancel.uuid })
-    })
+    if(patch.cancels) {
+      patch.cancels.forEach(function (cancel) {
+        payload.push({ op: 'remove', path: '/' + cancel.uuid })
+      })
+    }
     if (patch.updates && patch.updates.length > 0) {
       payload.push({ op: 'replace', path: "", value: { orders: patch.updates } })
     }
@@ -184,7 +186,7 @@ module.exports = function (loginless, configs) {
   function onReadOnly(status) {
     try {
       if (readonlyApp == status.readonly) return
-      if (status.readonly) return readonlyApp = status.readonly
+      if (status.readonly) return (readonlyApp = status.readonly)
       loginless.socket.register()
       account.getUserDetails().then(function () {
         readonlyApp = status.readonly

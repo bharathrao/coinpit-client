@@ -1,6 +1,6 @@
 {
   "name": "coinpit-client",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "client library for coinpit",
   "main": "src/index.js",
   "scripts": {
@@ -25,9 +25,6 @@
     "url": "https://github.com/coinpit/coinpit-client/issues"
   },
   "homepage": "https://github.com/coinpit/coinpit-client#readme",
-  "jshintConfig": {
-    "asi": true
-  },
   "dependencies": {
     "affirm.js": "^1.0.0",
     "bitcoinjs-lib": "2.1.4",

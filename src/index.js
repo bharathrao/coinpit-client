@@ -9,6 +9,8 @@ module.exports = (function () {
 
   client.getAccount = function (privKey, coinpitUrl) {
     affirm(privKey, 'private key required to create account')
+    coinpitUrl = coinpitUrl || inferUrlFromPrivateKey(privKey)
+
     affirm(coinpitUrl, 'coinpit base url required to create account')
     var loginless = require("loginless")(coinpitUrl, "/api/v1")
     return loginless.getServerKey(privKey)
@@ -25,6 +27,10 @@ module.exports = (function () {
           return account
         })
       })
+  }
+
+  function inferUrlFromPrivateKey(key) {
+    return key[0] === 'K' || key[0] == 'L' ? "https://live.coinpit.io" : "https://live.coinpit.me"
   }
 
   return client
