@@ -22,7 +22,7 @@ module.exports = (function () {
         return require("./account")(loginless, configs)
       })
       .then(function updateUserDetails(account) {
-        var promises = bluebird.all([account.getUserDetails(), account.updateAccountBalance()])
+        var promises = bluebird.all([account.getAll(), account.updateAccountBalance()])
         return promises.then(function (response) {
           return account
         })
