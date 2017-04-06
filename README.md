@@ -29,13 +29,27 @@ CoinpitClient.getAccount(walletData.privateKey)
     console.log(data)
   })
 ```
-
-## Account API
-
+## General Exchange Info
+### Exchange bid asks
+```javascript
+account.getBidAsk()
 ```
-// list of open orders
-var openOrders = account.getOpenOrders()
-/*
+### Get traded instruments
+```javascript
+account.getInstruments()
+```
+### Get Trading Bands
+```javascript
+account.getIndexBands()
+```
+## Account Management
+
+### Get Account balances
+```javascript
+var balance = account.getBalance()
+```
+### Result
+```
 accountBalance Format:
 {
      balance        : multisig balance + margin balance + profit or loss,
@@ -43,20 +57,98 @@ accountBalance Format:
      multisig       : multisig balance (exludes unconfirmed),
      margin         : margin balance (includes unconfirmed)
 }
-*/
-var accountAbalance = account.getBalance()
-// returns exchange bid ask
-account.getBidAsk()
+```
+
+## Order Management
+More examples at https://github.com/coinpit/coinpit-bots/blob/master/src/marketmakerBot.js
+- valid order Types: MKT (Market), LMT(Limit), STM(Stop-Market), SLM(Stop-Limit)
+- valid side: buy, sell    
+
+
+stopPrice and targetPrice are relative to fill price.
+
+### Get open orders
+```javascript
+var openOrders = account.getOpenOrders()
+```
+### Result
+```
 
 ```
 
-## Socket Topics
-Coinpit client receives realtime messages from the exchange. You may use ```account.loginless.socket``` to transparently send and listen to socket messages.
+### Create Order
 
 ```javascript
-// socket used by coinpit-client
+var orders = yield account.createOrders([
+  {
+    price:620.1, side:'buy', orderType:'LMT', stopPrice:1.0, targetPrice:2.0, "instrument":"BTC1"
+  }
+])
+```
+### Update order
+```javascript
+var orders = yield account.updateOrders([
+  {
+    uuid:"0d42be40-93f4-11e6-9bce-18efd6b9331e",
+    userid:"<usrid>","price":640
+  },
+  {
+    uuid:"0d429730-93f4-11e6-a7bb-abf70afc0d67",
+    userid:"<usrid>","price":633.6
+  }
+])
+```
+
+### Cancel order
+```javascript
+var result = yield account.cancelOrders([
+  {
+    uuid:"0d42be40-93f4-11e6-9bce-18efd6b9331e"
+  },
+  {
+    uuid:"0d429730-93f4-11e6-a7bb-abf70afc0d67"
+  }
+])
+```
+
+## Sending bulk orders using PATCH
+- cancels: orders object with uuid
+- updated: list of orders to be updated
+- creates: list of orders to be created
+- merge: list of order uuids. make sure to provide both stop and target orders uuids.
+- split: uuid of order to be split and one quantity of the quantity
+```javascript
+var payload = {
+cancels:[
+    {uuid:"059af9e0-9107-11e6-9d5f-ec4c64c1864f"},
+    {uuid:"059af9e0-9107-11e6-9d5f-ec4c64c1865f"},
+    ],
+updates:[
+    {"uuid":"0d42be40-93f4-11e6-9bce-18efd6b9331e","userid":"<usrid>","price":640},
+    {"uuid":"0d429730-93f4-11e6-a7bb-abf70afc0d67","userid":"<usrid>","price":633.6}
+    ],
+creates:[
+    {price:620.1, side:'buy', orderType:'LMT', stopPrice:1.0, targetPrice:2.0, "instrument":"BTC1"}
+    ],
+merge:[
+    "e3d269d1-9424-11e6-bb76-970122dc4d3a",
+    "e3d269d0-9424-11e6-9766-f5d52d60c65d",
+    "e3406301-9424-11e6-b859-38f93e196d74",
+    "e3406300-9424-11e6-9aa4-cf820243deeb"
+    ],
+split:{uuid:"e9bdc381-9424-11e6-80a3-95573a44c8ab","quantity":1}
+}
+var result = yield account.patchOrders(payload)
+```
+
+## Socket.io Topics
+Coinpit client receives realtime socket.io messages from the exchange. This socket transparently performs authentication.
+
+```javascript
 var socket = account.loginless.socket
 ```
+
+You may use ```account.loginless.socket``` to send and listen to the following socket messages:
 
 ### trade
 Trade information is sent on every new trade.
@@ -93,7 +185,7 @@ OR
 ```
 
 ### priceband
-The current trading band and ndex price used by coinpit. Trades occur only inside the band with very few exceptions. Stops outside the band are not triggered.
+The current trading band and index price used by coinpit. Trades occur only inside the band with very few exceptions. Stops outside the band are not triggered.
 ```json
 {"price":636.8,"lastProvider":"bitstamp","used":2, "providers":{"gemini":{"price":638.4,"time":1476337867242},"okcoin":{"price":633.5,"time":1476309721150,"expired":true},"bitfinex":{"price":638.03,"time":1476309783712,"expired":true},"coinbase":{"price":634.46,"time":1476309824389,"expired":true},"bitstamp":{"price":635.3,"time":1476337961938}} ,"max":638.8,"min":634.8, "instrument":"BTC1"}
 ```
@@ -102,76 +194,4 @@ The current trading band and ndex price used by coinpit. Trades occur only insid
 Unix timestamp on the server. This may be used to adjust for clock skew on clients with inaccurate clocks. This may be used to ensure nonce accuracy.
 ```
 {"client":1476336962443,"server":1476336962542}
-```
-
-
-## Order Management
-More examples at https://github.com/coinpit/coinpit-bots/blob/master/src/marketmakerBot.js
-- valid order Types: MKT (Market), LMT(Limit), STM(Stop-Market), SLM(Stop-Limit)
-- valid side: buy, sell    
-
-### Create Order
-stopPrice and targetPrice are relative to order matching price.
-
-```javascript
-var orders = yield account.createOrders([
-  {
-    price:620.1, side:'buy', orderType:'LMT', stopPrice:1.0, targetPrice:2.0, "instrument":"BTC1"
-  }
-])
-```
-### Update order
-```javascript
-var orders = yield account.updateOrders([
-  {
-    uuid:"0d42be40-93f4-11e6-9bce-18efd6b9331e",
-    userid:"<usrid>","price":640
-  },
-  {
-    uuid:"0d429730-93f4-11e6-a7bb-abf70afc0d67",
-    userid:"<usrid>","price":633.6
-  }
-])
-```
-
-### Cancel order
-```javascript
-var result = yield account.cancelOrders([
-  {
-    uuid:"0d42be40-93f4-11e6-9bce-18efd6b9331e"
-  },
-  {
-    uuid:"0d429730-93f4-11e6-a7bb-abf70afc0d67"
-  }
-])
-```
-
-## Sending bulk orders using PATCH
-cancels: orders object with uuid
-updated: list of orders to be updated
-creates: list of orders to be created
-merge: list of order uuids. make sure to provide both stop and target orders uuids.
-split: uuid of order to be split and one quantity of the quantity
-```javascript
-var payload = {
-cancels:[
-    {uuid:"059af9e0-9107-11e6-9d5f-ec4c64c1864f"},
-    {uuid:"059af9e0-9107-11e6-9d5f-ec4c64c1865f"},
-    ],
-updates:[
-    {"uuid":"0d42be40-93f4-11e6-9bce-18efd6b9331e","userid":"<usrid>","price":640},
-    {"uuid":"0d429730-93f4-11e6-a7bb-abf70afc0d67","userid":"<usrid>","price":633.6}
-    ],
-creates:[
-    {price:620.1, side:'buy', orderType:'LMT', stopPrice:1.0, targetPrice:2.0, "instrument":"BTC1"}
-    ],
-merge:[
-    "e3d269d1-9424-11e6-bb76-970122dc4d3a",
-    "e3d269d0-9424-11e6-9766-f5d52d60c65d",
-    "e3406301-9424-11e6-b859-38f93e196d74",
-    "e3406300-9424-11e6-9aa4-cf820243deeb"
-    ],
-split:{uuid:"e9bdc381-9424-11e6-80a3-95573a44c8ab","quantity":1}
-}
-var result = yield account.patchOrders(payload)
 ```
