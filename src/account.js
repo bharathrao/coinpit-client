@@ -53,7 +53,7 @@ module.exports = function (loginless, configs) {
 
   account.patchOrders = function (symbol, patch) {
     var payload = []
-    if(patch.cancels) {
+    if (patch.cancels) {
       patch.cancels.forEach(function (cancel) {
         payload.push({ op: 'remove', path: '/' + cancel.uuid })
       })
@@ -448,11 +448,11 @@ module.exports = function (loginless, configs) {
     return marginUtil.getMinCrossStopMargin(orders, pnl, positions, marginBalance.balance, band)
   }
 
-/*
-  account.getMaxMargin = function () {
-    return account.calculateAvailableMarginIfCrossShifted(account.getOpenOrders())
-  }
-*/
+  /*
+   account.getMaxMargin = function () {
+   return account.calculateAvailableMarginIfCrossShifted(account.getOpenOrders())
+   }
+   */
 
   function logPatch(payload) {
     if (!account.logging) return
@@ -489,7 +489,7 @@ module.exports = function (loginless, configs) {
       order_add       : onOrderAdd,
       order_del       : onOrderDel,
       order_error     : onError,
-      orders_del      : onFlat,
+      order_del_all   : onFlat,
       order_update    : onOrderUpdate,
       order_patch     : onOrderPatch,
       account         : onUserMessage,
