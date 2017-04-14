@@ -1,186 +1,610 @@
 {
-  "configs"                           : {
-    "config"     : {
-      "default": {
-        "instrument": "test"
-      },
-      "blockchainapi":{
-        "uri":"someuri"
-      },
-      "network": "testnet"
-    },
+  "configs":                            {
     "instruments": {
-      "test": {
-        "ticksperpoint": 10,
-        "type"         : "quanto"
+      "BTCUSD7J28": {
+        "maxLeverage":                100,
+        "expiryClass":                "weekly",
+        "bandUpperLimit":             0.01,
+        "minLimitStop":               1.6,
+        "disabled":                   false,
+        "minMarketStop":              1.6,
+        "bandLowerLimit":             0.01,
+        "ticksize":                   1,
+        "uplDecimalPlaces":           8,
+        "start":                      1492190100000,
+        "next":                       "BTCUSD7K05",
+        "commission":                 0.0005,
+        "template":                   "BTCUSD",
+        "crossMarginInitialStop":     15,
+        "type":                       "inverse",
+        "introducerReward":           0,
+        "status":                     "active",
+        "targetprice":                3,
+        "symbol":                     "BTCUSD7J28",
+        "expiry":                     1493399700000,
+        "contractusdvalue":           100,
+        "introducedReward":           0,
+        "externalFeed":               "coinpit-index#BTCUSD",
+        "stopcushion":                2,
+        "ticksperpoint":              10,
+        "stopprice":                  2,
+        "rewardsCalculationInterval": 14400,
+        "reward":                     0
+      },
+      "BTCUSD7J21": {
+        "maxLeverage":                100,
+        "expiryClass":                "weekly",
+        "bandUpperLimit":             0.02,
+        "minLimitStop":               1.6,
+        "disabled":                   false,
+        "minMarketStop":              1.6,
+        "bandLowerLimit":             0.02,
+        "ticksize":                   1,
+        "uplDecimalPlaces":           8,
+        "start":                      1491585300000,
+        "next":                       "BTCUSD7J28",
+        "commission":                 0.0005,
+        "template":                   "BTCUSD",
+        "crossMarginInitialStop":     15,
+        "type":                       "inverse",
+        "introducerReward":           0,
+        "status":                     "active",
+        "targetprice":                3,
+        "symbol":                     "BTCUSD7J21",
+        "expiry":                     1492794900000,
+        "contractusdvalue":           100,
+        "introducedReward":           0,
+        "externalFeed":               "coinpit-index#BTCUSD",
+        "stopcushion":                2,
+        "ticksperpoint":              10,
+        "stopprice":                  2,
+        "rewardsCalculationInterval": 14400,
+        "reward":                     0
+      }
+    },
+    "config":      {
+      "sliceSize":             10000000,
+      "maxLeverage":           50,
+      "links":                 {
+        "blockcypher":   "https://live.blockcypher.com/btc-testnet",
+        "blocktrail":    "https://www.blocktrail.com/tBTC",
+        "blockexplorer": "https://testnet.blockexplorer.com"
+      },
+      "maximumFee":            150000,
+      "minimumFee":            50000,
+      "sliceThreshold":        10,
+      "geofence":              {
+        "block": ["US"]
+      },
+      "bitcoinDust":           10000,
+      "network":               "testnet",
+      "maxInputs":             50,
+      "feePerKB":              50000,
+      "recoveryFeePerKB":      25000,
+      "maxPositionsMerge":     20,
+      "blockchainapi":         {
+        "socketuri": "https://insight.coinpit.me",
+        "uri":       "https://insight.coinpit.me/insight-api",
+        "provider":  "insight"
+      },
+      "maxOrdersCreateUpdate": 100,
+      "marginFeeThreshold":    0.9,
+      "sendFundsMaxTXfee":     1000000,
+      "noSignup":              false,
+      "feeCheckInterval":      3600000,
+      "feeChangeTolerance":    0.05,
+      "reservedTicks":         2,
+      "sendFundsTXfee":        50000
+    }
+  },
+  "account":                            {
+    "multisig":      302676545,
+    "displayMargin": 374103575,
+    "positions":     {
+      "BTCUSD7J28": {
+        "entryAmount":  -8439531,
+        "commission":   0,
+        "userid":       "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+        "instrument":   "BTCUSD7J28",
+        "averagePrice": 1184.9,
+        "quantity":     1
+      },
+      "BTCUSD7J21": {
+        "entryAmount":  -16881912,
+        "commission":   0,
+        "userid":       "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+        "instrument":   "BTCUSD7J21",
+        "averagePrice": 1184.7,
+        "quantity":     2
+      }
+    },
+    "userid":        "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+    "pnl":           {
+      "commission": 54838,
+      "userid":     "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+      "pnl":        -103274,
+      "accountid":  "2NGJqK6fXWfMMtJwWHdKT59WzqKDxFKagJp"
+    },
+    "margin":        374103575,
+    "orders":        {
+      "BTCUSD7J28": {
+        "c45ba360-2136-11e7-92f9-aef23f9e82b8": {
+          "entryOrder":           {
+            "b0d79b00-2136-11e7-8c6d-bac41b22c40e": 1
+          },
+          "normalizedEntryPrice": 8439531,
+          "stopPrice":            6,
+          "eventTime":            1492190476438565,
+          "entryAmount":          8439531,
+          "uuid":                 "c45ba360-2136-11e7-92f9-aef23f9e82b8",
+          "oco":                  "c45ba361-2136-11e7-a66c-fdfdb4ca12ec",
+          "commission":           0.0005,
+          "orderType":            "STP",
+          "instrument":           "BTCUSD7J28",
+          "maxStop":              1177.4,
+          "normalizedMaxStop":    8493290,
+          "filled":               0,
+          "status":               "open",
+          "entryPrice":           1184.9,
+          "normalizedPrice":      8478888,
+          "price":                1179.4,
+          "entryTime":            1492190476438565,
+          "cushion":              2,
+          "crossMargin":          false,
+          "targetPrice":          2,
+          "reservedTicks":        2,
+          "userid":               "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+          "cancelled":            0,
+          "reward":               0,
+          "averagePrice":         0,
+          "side":                 "sell",
+          "quantity":             1
+        },
+        "c45ba361-2136-11e7-a66c-fdfdb4ca12ec": {
+          "normalizedEntryPrice": 8439531,
+          "stopPrice":            6,
+          "eventTime":            1492190476438648,
+          "entryAmount":          8439531,
+          "uuid":                 "c45ba361-2136-11e7-a66c-fdfdb4ca12ec",
+          "oco":                  "c45ba360-2136-11e7-92f9-aef23f9e82b8",
+          "commission":           0.0005,
+          "orderType":            "TGT",
+          "instrument":           "BTCUSD7J28",
+          "entryOrder":           {
+            "b0d79b00-2136-11e7-8c6d-bac41b22c40e": 1
+          },
+          "filled":               0,
+          "status":               "open",
+          "entryPrice":           1184.9,
+          "normalizedPrice":      8425310,
+          "price":                1186.9,
+          "entryTime":            1492190476438648,
+          "cushion":              2,
+          "crossMargin":          false,
+          "targetPrice":          2,
+          "reservedTicks":        2,
+          "userid":               "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+          "cancelled":            0,
+          "reward":               0,
+          "averagePrice":         0,
+          "side":                 "sell",
+          "quantity":             1
+        },
+        "d1e5d321-2136-11e7-95de-c3fd1a5d75a5": {
+          "clientid":        "9e274039-a8ea-422b-a79a-89eee499f08e",
+          "marginPerQty":    125284,
+          "stopPrice":       15,
+          "eventTime":       1492190499154731,
+          "uuid":            "d1e5d321-2136-11e7-95de-c3fd1a5d75a5",
+          "instrument":      "BTCUSD7J28",
+          "orderType":       "LMT",
+          "commission":      0.0005,
+          "entryOrder":      {},
+          "filled":          0,
+          "status":          "open",
+          "normalizedPrice": 8442381,
+          "price":           1184.5,
+          "entryTime":       1492190499154731,
+          "cushion":         2,
+          "crossMargin":     true,
+          "targetPrice":     6,
+          "reservedTicks":   2,
+          "userid":          "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+          "cancelled":       0,
+          "reward":          0,
+          "averagePrice":    0,
+          "side":            "buy",
+          "quantity":        3
+        }
+      },
+      "BTCUSD7J21": {
+        "d61b6681-2136-11e7-a04f-8438a2f0c230": {
+          "clientid":        "1c5f2739-71d2-4e96-948c-1302050ce7ab",
+          "marginPerQty":    67222,
+          "stopPrice":       7,
+          "eventTime":       1492190506216745,
+          "uuid":            "d61b6681-2136-11e7-a04f-8438a2f0c230",
+          "instrument":      "BTCUSD7J21",
+          "orderType":       "SLM",
+          "commission":      0.0005,
+          "entryOrder":      {},
+          "filled":          0,
+          "status":          "open",
+          "triggered":       true,
+          "normalizedPrice": 8447373,
+          "price":           1183.8,
+          "entryTime":       1492190506239249,
+          "cushion":         2,
+          "crossMargin":     false,
+          "targetPrice":     6,
+          "reservedTicks":   2,
+          "userid":          "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+          "cancelled":       0,
+          "reward":          0,
+          "averagePrice":    0,
+          "side":            "buy",
+          "quantity":        2
+        },
+        "cd615c70-2136-11e7-8c09-f6728e92bc2c": {
+          "entryOrder":           {
+            "97b324a1-2136-11e7-89d0-23e072b572c4": 2
+          },
+          "normalizedEntryPrice": 8440956,
+          "stopPrice":            6,
+          "eventTime":            1492190491575550,
+          "entryAmount":          16881912,
+          "uuid":                 "cd615c70-2136-11e7-8c09-f6728e92bc2c",
+          "oco":                  "cd615c71-2136-11e7-a9a7-0cc49f518163",
+          "commission":           0.0005,
+          "orderType":            "STP",
+          "instrument":           "BTCUSD7J21",
+          "maxStop":              1177,
+          "normalizedMaxStop":    8496177,
+          "filled":               0,
+          "status":               "open",
+          "entryPrice":           1184.7,
+          "normalizedPrice":      8481764,
+          "price":                1179,
+          "entryTime":            1492190491575550,
+          "cushion":              2,
+          "crossMargin":          false,
+          "targetPrice":          2,
+          "reservedTicks":        2,
+          "userid":               "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+          "cancelled":            0,
+          "reward":               0,
+          "averagePrice":         0,
+          "side":                 "sell",
+          "quantity":             2
+        },
+        "cd615c71-2136-11e7-a9a7-0cc49f518163": {
+          "normalizedEntryPrice": 8440956,
+          "stopPrice":            6,
+          "eventTime":            1492190491575635,
+          "entryAmount":          16881912,
+          "uuid":                 "cd615c71-2136-11e7-a9a7-0cc49f518163",
+          "oco":                  "cd615c70-2136-11e7-8c09-f6728e92bc2c",
+          "commission":           0.0005,
+          "orderType":            "TGT",
+          "instrument":           "BTCUSD7J21",
+          "entryOrder":           {
+            "97b324a1-2136-11e7-89d0-23e072b572c4": 2
+          },
+          "filled":               0,
+          "status":               "open",
+          "entryPrice":           1184.7,
+          "normalizedPrice":      8426730,
+          "price":                1186.7,
+          "entryTime":            1492190491575635,
+          "cushion":              2,
+          "crossMargin":          false,
+          "targetPrice":          2,
+          "reservedTicks":        2,
+          "userid":               "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+          "cancelled":            0,
+          "reward":               0,
+          "averagePrice":         0,
+          "side":                 "sell",
+          "quantity":             2
+        }
+      }
+    },
+    "accountMargin": 374894007
+  },
+  "orderDelResponse":                   {
+    "result":    ["c45ba361-2136-11e7-a66c-fdfdb4ca12ec", "d58e1aa0-2136-11e7-be1c-5e3308ae7b93", "cd615c71-2136-11e7-a9a7-0cc49f518163"],
+    "resuestid": "del response id"
+  },
+  "afterDelResult":                     {
+    "openOrders":      {
+      "BTCUSD7J28": {
+        "c45ba360-2136-11e7-92f9-aef23f9e82b8": {
+          "entryOrder":           {
+            "b0d79b00-2136-11e7-8c6d-bac41b22c40e": 1
+          },
+          "normalizedEntryPrice": 8439531,
+          "stopPrice":            6,
+          "eventTime":            1492190476438565,
+          "entryAmount":          8439531,
+          "uuid":                 "c45ba360-2136-11e7-92f9-aef23f9e82b8",
+          "oco":                  "c45ba361-2136-11e7-a66c-fdfdb4ca12ec",
+          "commission":           0.0005,
+          "orderType":            "STP",
+          "instrument":           "BTCUSD7J28",
+          "maxStop":              1177.4,
+          "normalizedMaxStop":    8493290,
+          "filled":               0,
+          "status":               "open",
+          "entryPrice":           1184.9,
+          "normalizedPrice":      8478888,
+          "price":                1179.4,
+          "entryTime":            1492190476438565,
+          "cushion":              2,
+          "crossMargin":          false,
+          "targetPrice":          2,
+          "reservedTicks":        2,
+          "userid":               "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+          "cancelled":            0,
+          "reward":               0,
+          "averagePrice":         0,
+          "side":                 "sell",
+          "quantity":             1
+        },
+        "d1e5d321-2136-11e7-95de-c3fd1a5d75a5": {
+          "clientid":        "9e274039-a8ea-422b-a79a-89eee499f08e",
+          "marginPerQty":    125284,
+          "stopPrice":       15,
+          "eventTime":       1492190499154731,
+          "uuid":            "d1e5d321-2136-11e7-95de-c3fd1a5d75a5",
+          "instrument":      "BTCUSD7J28",
+          "orderType":       "LMT",
+          "commission":      0.0005,
+          "entryOrder":      {},
+          "filled":          0,
+          "status":          "open",
+          "normalizedPrice": 8442381,
+          "price":           1184.5,
+          "entryTime":       1492190499154731,
+          "cushion":         2,
+          "crossMargin":     true,
+          "targetPrice":     6,
+          "reservedTicks":   2,
+          "userid":          "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+          "cancelled":       0,
+          "reward":          0,
+          "averagePrice":    0,
+          "side":            "buy",
+          "quantity":        3
+        }
+      },
+      "BTCUSD7J21": {
+        "d61b6681-2136-11e7-a04f-8438a2f0c230": {
+          "clientid":        "1c5f2739-71d2-4e96-948c-1302050ce7ab",
+          "marginPerQty":    67222,
+          "stopPrice":       7,
+          "eventTime":       1492190506216745,
+          "uuid":            "d61b6681-2136-11e7-a04f-8438a2f0c230",
+          "instrument":      "BTCUSD7J21",
+          "orderType":       "SLM",
+          "commission":      0.0005,
+          "entryOrder":      {},
+          "filled":          0,
+          "status":          "open",
+          "triggered":       true,
+          "normalizedPrice": 8447373,
+          "price":           1183.8,
+          "entryTime":       1492190506239249,
+          "cushion":         2,
+          "crossMargin":     false,
+          "targetPrice":     6,
+          "reservedTicks":   2,
+          "userid":          "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+          "cancelled":       0,
+          "reward":          0,
+          "averagePrice":    0,
+          "side":            "buy",
+          "quantity":        2
+        },
+        "cd615c70-2136-11e7-8c09-f6728e92bc2c": {
+          "entryOrder":           {
+            "97b324a1-2136-11e7-89d0-23e072b572c4": 2
+          },
+          "normalizedEntryPrice": 8440956,
+          "stopPrice":            6,
+          "eventTime":            1492190491575550,
+          "entryAmount":          16881912,
+          "uuid":                 "cd615c70-2136-11e7-8c09-f6728e92bc2c",
+          "oco":                  "cd615c71-2136-11e7-a9a7-0cc49f518163",
+          "commission":           0.0005,
+          "orderType":            "STP",
+          "instrument":           "BTCUSD7J21",
+          "maxStop":              1177,
+          "normalizedMaxStop":    8496177,
+          "filled":               0,
+          "status":               "open",
+          "entryPrice":           1184.7,
+          "normalizedPrice":      8481764,
+          "price":                1179,
+          "entryTime":            1492190491575550,
+          "cushion":              2,
+          "crossMargin":          false,
+          "targetPrice":          2,
+          "reservedTicks":        2,
+          "userid":               "moVB8e8oWX1oKjaaesdimAGqJHxjih8kjU",
+          "cancelled":            0,
+          "reward":               0,
+          "averagePrice":         0,
+          "side":                 "sell",
+          "quantity":             2
+        }
       }
     }
   },
-  "closedOrders"                      : {
-    "result1"       : {
+  "closedOrders":                       {
+    "result1":        {
     },
-    "result2"       : {
+    "result2":        {
     },
     "serverResponse": {
     },
-    "config"        : {
+    "config":         {
       "default": {
         "instrument": "test"
       },
       "network": "testnet"
     },
-    "instruments"   : {
+    "instruments":    {
       "test": {
         "ticksperpoint": 10,
-        "type"         : "quanto"
+        "type":          "quanto"
       }
     }
   },
-  "createOrders"                      : {
-    "order"         : {
-      "userid"     : "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
-      "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
-      "side"       : "sell",
-      "quantity"   : 1,
-      "price"      : 416,
-      "orderType"  : "LMT",
-      "instrument" : "test",
-      "stopPrice"  : 0.5,
+  "createOrders":                       {
+    "order":          {
+      "userid":      "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
+      "clientid":    "9d087537-eb01-11e5-a9d9-d3b37e257193",
+      "side":        "sell",
+      "quantity":    1,
+      "price":       416,
+      "orderType":   "LMT",
+      "instrument":  "test",
+      "stopPrice":   0.5,
       "targetPrice": 1
     },
     "serverResponse": {
     },
     "loginlessEvent": "order_add",
-    "result"        : {
-      "uuid"       : "9d087536-eb01-11e5-a77a-7e7ae8165098",
-      "userid"     : "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
-      "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
-      "side"       : "sell",
-      "quantity"   : 1,
-      "price"      : 416,
-      "orderType"  : "LMT",
-      "instrument" : "test",
-      "stopPrice"  : 0.5,
+    "result":         {
+      "uuid":        "9d087536-eb01-11e5-a77a-7e7ae8165098",
+      "userid":      "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
+      "clientid":    "9d087537-eb01-11e5-a9d9-d3b37e257193",
+      "side":        "sell",
+      "quantity":    1,
+      "price":       416,
+      "orderType":   "LMT",
+      "instrument":  "test",
+      "stopPrice":   0.5,
       "targetPrice": 1
     }
   },
-  "createOrdersFail"                  : {
-    "order"         : {
-      "userid"     : "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
-      "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
-      "side"       : "sell",
-      "quantity"   : 1,
-      "price"      : 416,
-      "orderType"  : "LMT",
-      "instrument" : "test",
-      "stopPrice"  : 0.5,
+  "createOrdersFail":                   {
+    "order":          {
+      "userid":      "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
+      "clientid":    "9d087537-eb01-11e5-a9d9-d3b37e257193",
+      "side":        "sell",
+      "quantity":    1,
+      "price":       416,
+      "orderType":   "LMT",
+      "instrument":  "test",
+      "stopPrice":   0.5,
       "targetPrice": 1
     },
     "serverResponse": {
     },
     "loginlessEvent": "order_error",
-    "result"        : {
+    "result":         {
       "error": {
         "error": "some error"
       }
     }
   },
-  "updateOrders"                      : {
-    "order"         : {
-      "userid"     : "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
-      "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
-      "side"       : "sell",
-      "quantity"   : 1,
-      "price"      : 416,
-      "orderType"  : "LMT",
-      "instrument" : "test",
-      "stopPrice"  : 0.5,
+  "updateOrders":                       {
+    "order":          {
+      "userid":      "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
+      "clientid":    "9d087537-eb01-11e5-a9d9-d3b37e257193",
+      "side":        "sell",
+      "quantity":    1,
+      "price":       416,
+      "orderType":   "LMT",
+      "instrument":  "test",
+      "stopPrice":   0.5,
       "targetPrice": 1
     },
     "serverResponse": {
     },
-    "change"        : {
-      "key"  : "price",
+    "change":         {
+      "key":   "price",
       "value": 417
     },
     "loginlessEvent": "order_update",
-    "result"        : {
-      "uuid"       : "9d087536-eb01-11e5-a77a-7e7ae8165098",
-      "userid"     : "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
-      "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
-      "side"       : "sell",
-      "quantity"   : 1,
-      "price"      : 417,
-      "orderType"  : "LMT",
-      "instrument" : "test",
-      "stopPrice"  : 0.5,
+    "result":         {
+      "uuid":        "9d087536-eb01-11e5-a77a-7e7ae8165098",
+      "userid":      "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
+      "clientid":    "9d087537-eb01-11e5-a9d9-d3b37e257193",
+      "side":        "sell",
+      "quantity":    1,
+      "price":       417,
+      "orderType":   "LMT",
+      "instrument":  "test",
+      "stopPrice":   0.5,
       "targetPrice": 1
     }
   },
-  "assertAvailableMargin"             : {
-    "openOrders"    : {
+  "assertAvailableMargin":              {
+    "openOrders":     {
       "test": {
         "uuid1": {
-          "uuid"      : "uuid1",
+          "uuid":       "uuid1",
           "instrument": "test"
         },
         "uuid2": {
-          "uuid"      : "uuid2",
+          "uuid":       "uuid2",
           "instrument": "test"
         },
         "uuid3": {
-          "uuid"      : "uuid3",
+          "uuid":       "uuid3",
           "instrument": "test"
         }
       }
     },
-    "orders"        : [
+    "orders":         [
       {
-        "uuid"      : "uuid2",
+        "uuid":       "uuid2",
         "instrument": "test",
-        "updated"   : true
+        "updated":    true
       }, {
-        "created"   : true,
+        "created":    true,
         "instrument": "test"
       }
     ],
     "serverResponse": {
     },
-    "result"        : {
+    "result":         {
       "orders": [
         {
-          "uuid"      : "uuid1",
+          "uuid":       "uuid1",
           "instrument": "test"
         }, {
-          "uuid"      : "uuid2",
+          "uuid":       "uuid2",
           "instrument": "test",
-          "updated"   : true
+          "updated":    true
         }, {
-          "uuid"      : "uuid3",
+          "uuid":       "uuid3",
           "instrument": "test"
         }, {
           "instrument": "test",
-          "created"   : true
+          "created":    true
         }
       ]
     }
   },
   "createOrdersWithInsufficientMargin": {
-    "order"         : {
-      "userid"     : "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
-      "clientid"   : "9d087537-eb01-11e5-a9d9-d3b37e257193",
-      "side"       : "sell",
-      "quantity"   : 1,
-      "price"      : 416,
-      "orderType"  : "LMT",
-      "instrument" : "test",
-      "stopPrice"  : 0.5,
+    "order":          {
+      "userid":      "mnDfP9WSBL6txZBg78rCwHSSWQ1p76XUYr",
+      "clientid":    "9d087537-eb01-11e5-a9d9-d3b37e257193",
+      "side":        "sell",
+      "quantity":    1,
+      "price":       416,
+      "orderType":   "LMT",
+      "instrument":  "test",
+      "stopPrice":   0.5,
       "targetPrice": 1
     },
     "serverResponse": {
     },
     "loginlessEvent": "order_error",
-    "result"        : {
+    "result":         {
       "message": "Insufficient Margin"
     }
   }

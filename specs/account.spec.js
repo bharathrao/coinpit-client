@@ -1,15 +1,37 @@
-var expect      = require('expect.js')
-var fixtures    = require('./fixtures/account.spec.json')
-var Account     = require("../src/account")
-var Loginless   = require("./loginless.mock")
-var util        = require('../src/util')
-var assert      = require("affirm.js")
-var _           = require('lodash')
-var mock        = require('mock-require')
+var expect    = require('expect.js')
+var fixtures  = require('./fixtures/account.spec.json')
+var Account   = require("../src/account")
+var Loginless = require("./loginless.mock")
+var util      = require('../src/util')
+var assert    = require("affirm.js")
+var _         = require('lodash')
+var mock      = require('mock-require')
+var sinon     = require('sinon')
 
 require('mocha-generators').install()
 
-describe.skip('account test', function () {
+describe('account test', function () {
+  var stubList = []
+  afterEach(function(){
+    stubList.forEach(stub=>stub.restore())
+    stubList = []
+  })
+
+  it('should remove orders from all orders cache when order delete response comes from server', function () {
+    var account = Account({}, fixtures.configs)
+    sinon.stub(account, 'respondSuccess', function () {
+
+    })
+    stubList.push(account.respondSuccess)
+    account.marginBalance = {balance: fixtures.account.accountMargin}
+    account.multisigBalance = {balance: fixtures.account.multisig}
+    account.openOrders = _.cloneDeep(fixtures.account.orders)
+    account.onOrderDel(fixtures.orderDelResponse)
+    expect(account.openOrders).eql(fixtures.afterDelResult.openOrders)
+  })
+})
+
+describe.skip('account test old', function () {
   before(function () {
     mock('insight-util', function () {
       return { subscribe: nop, unsubscribe: nop }

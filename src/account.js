@@ -1,17 +1,18 @@
+var bluebird    = require('bluebird')
+var nodeUUID    = require('uuid')
+var assert      = require('affirm.js')
+var _           = require('lodash')
+var mangler     = require('mangler')
+var util        = require('util')
+var InsightUtil = require('insight-util')
+var marginUtil  = require('coinpit-common/marginUtil')
+var bitcoinutil = require("bitcoinutil")
+var txutil      = require('./txutil')
+
 module.exports = function (loginless, configs) {
-  var bluebird    = require('bluebird')
-  var nodeUUID    = require('uuid')
-  var assert      = require('affirm.js')
-  var _           = require('lodash')
-  var mangler     = require('mangler')
-  var util        = require('util')
-  var InsightUtil = require('insight-util')
-  var marginUtil  = require('coinpit-common/marginUtil')
-  var bitcoinutil = require("bitcoinutil")
-  var txutil      = require('./txutil')
-  var account     = {}
+  var account = {}
   var positions, pnl, availableMargin, readonlyApp, ioconnected
-  var bidAsk      = {}
+  var bidAsk  = {}
 
   var promises        = {}
   var band            = {}
@@ -24,7 +25,8 @@ module.exports = function (loginless, configs) {
   account.openOrders = {}
   account.logging    = false
 
-  var multisigBalance, marginBalance
+  // account.multisigBalance
+  // account.marginBalance
 
   account.getOpenOrders = function () {
     return _.cloneDeep(account.openOrders)
@@ -44,10 +46,10 @@ module.exports = function (loginless, configs) {
 
   account.getBalance = function () {
     return {
-      balance        : multisigBalance.balance + marginBalance.balance + (pnl ? pnl.pnl : 0),
+      balance        : account.multisigBalance.balance + account.marginBalance.balance + (pnl ? pnl.pnl : 0),
       availableMargin: availableMargin,
-      multisig       : _.cloneDeep(multisigBalance),
-      margin         : _.cloneDeep(marginBalance)
+      multisig       : _.cloneDeep(account.multisigBalance),
+      margin         : _.cloneDeep(account.marginBalance)
     }
   }
 
@@ -114,11 +116,11 @@ module.exports = function (loginless, configs) {
   }
 
   account.transferToMargin = function (amountInSatoshi, feeInclusive) {
-    return account.insightUtil.getConfirmedUnspents(multisigBalance.address).then(function (confirmedUnspents) {
+    return account.insightUtil.getConfirmedUnspents(account.multisigBalance.address).then(function (confirmedUnspents) {
       var tx     = txutil.createTx(
         {
-          input       : multisigBalance.address,
-          destination : marginBalance.address,
+          input       : account.multisigBalance.address,
+          destination : account.marginBalance.address,
           amount      : amountInSatoshi,
           unspents    : confirmedUnspents,
           isMultisig  : true,
@@ -245,7 +247,8 @@ module.exports = function (loginless, configs) {
   }
 
   function removeOrdersFromCache(uuids) {
-    Object.keys(account.openOrders).forEach(function (orders) {
+    Object.keys(account.openOrders).forEach(function (symol) {
+      var orders = account.openOrders[symol]
       uuids.forEach(function (uuid) {
         delete orders[uuid]
       })
@@ -260,7 +263,7 @@ module.exports = function (loginless, configs) {
         if (PATCH_HANDLER[eachResponse.op]) PATCH_HANDLER[eachResponse.op](eachResponse.response)
         else console.log('eachResponse.op not found ', eachResponse.op, eachResponse)
       })
-      respondSuccess(response.requestid, _.cloneDeep(response.result))
+      account.respondSuccess(response.requestid, _.cloneDeep(response.result))
     } catch (e) {
       util.log(e);
       util.log(e.stack)
@@ -270,7 +273,7 @@ module.exports = function (loginless, configs) {
   function onOrderAdd(response) {
     try {
       updateOrders(response.result)
-      respondSuccess(response.requestid, _.cloneDeep(response.result))
+      account.respondSuccess(response.requestid, _.cloneDeep(response.result))
     } catch (e) {
       util.log(e);
       util.log(e.stack)
@@ -281,11 +284,11 @@ module.exports = function (loginless, configs) {
     onOrderAdd(response)
   }
 
-  function onOrderDel(response) {
+  account.onOrderDel = function onOrderDel(response) {
     try {
       removeOrdersFromCache(response.result)
       availableMargin = account.calculateAvailableMargin(account.getOpenOrders())
-      respondSuccess(response.requestid, response.result)
+      account.respondSuccess(response.requestid, response.result)
     } catch (e) {
       util.log(e);
       util.log(e.stack)
@@ -295,7 +298,7 @@ module.exports = function (loginless, configs) {
   function onFlat(response) {
     try {
       account.getAll().then(function () {
-        respondSuccess(response.requestid, _.cloneDeep(account.openOrders))
+        account.respondSuccess(response.requestid, _.cloneDeep(account.openOrders))
       })
     } catch (e) {
       util.log(e);
@@ -392,7 +395,7 @@ module.exports = function (loginless, configs) {
     account.config = config
   }
 
-  function respondSuccess(requestid, response) {
+  account.respondSuccess = function (requestid, response) {
     respond(requestid, response, 'resolve')
   }
 
@@ -441,11 +444,11 @@ module.exports = function (loginless, configs) {
   }
 
   account.calculateAvailableMargin = function (orders) {
-    return marginUtil.getMaxCrossStopMargin(orders, pnl, positions, marginBalance.balance, band)
+    return marginUtil.getMaxCrossStopMargin(orders, pnl, positions, account.marginBalance.balance, band)
   }
 
   account.calculateAvailableMarginIfCrossShifted = function (orders) {
-    return marginUtil.getMinCrossStopMargin(orders, pnl, positions, marginBalance.balance, band)
+    return marginUtil.getMinCrossStopMargin(orders, pnl, positions, account.marginBalance.balance, band)
   }
 
   /*
@@ -487,7 +490,7 @@ module.exports = function (loginless, configs) {
       reconnect_error : onDisconnect,
       reconnect_failed: onDisconnect,
       order_add       : onOrderAdd,
-      order_del       : onOrderDel,
+      order_del       : account.onOrderDel,
       order_error     : onError,
       order_del_all   : onFlat,
       order_update    : onOrderUpdate,
@@ -516,10 +519,10 @@ module.exports = function (loginless, configs) {
     switch (addressInfo.address) {
       case account.accountid:
         // if (myConfirmedBalance !== addressInfo.confirmed) adjustMarginSequentially()
-        multisigBalance = addressInfo
+        account.multisigBalance = addressInfo
         break;
       case account.serverAddress:
-        marginBalance = addressInfo
+        account.marginBalance = addressInfo
         break
       default:
         account.insightUtil.unsubscribe(addressInfo.address)
@@ -530,7 +533,7 @@ module.exports = function (loginless, configs) {
     band = priceBand
   }
 
-  function init() {
+  account.init = function init() {
     setupSocketEvents()
     copyFromLoginlessAccount()
     account.insightUtil.subscribe(account.accountid, addressListener)
@@ -558,6 +561,5 @@ module.exports = function (loginless, configs) {
     }
   }
 
-  init()
   return account
 }

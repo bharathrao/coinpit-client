@@ -19,7 +19,9 @@ module.exports = (function () {
       })
       .then(function createAccount(configs) {
         loginless.socket.register()
-        return require("./account")(loginless, configs)
+        var account = require("./account")(loginless, configs)
+        account.init()
+        return account
       })
       .then(function updateUserDetails(account) {
         var promises = bluebird.all([account.getAll(), account.updateAccountBalance()])
