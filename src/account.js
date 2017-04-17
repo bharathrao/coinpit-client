@@ -333,7 +333,7 @@ module.exports = function (loginless, configs) {
   function onError(response) {
     try {
       respondError(response.requestid, response.error)
-      refreshWithUserDetails(response.userDetails)
+      // refreshWithUserDetails(response.userDetails)
       if (!response.requestid) {
         //todo: this needs to be handled
         handleError("Error without requestid", response.error)
@@ -350,7 +350,7 @@ module.exports = function (loginless, configs) {
       if (message.error) {
         handleError(message.error)
       }
-      refreshWithUserDetails(message.userDetails)
+      refreshWithUserDetails(message.account)
     } catch (e) {
       util.log(e);
       util.log(e.stack)
