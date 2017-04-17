@@ -53,48 +53,72 @@ module.exports = function (loginless, configs) {
     }
   }
 
+  function getUuidList(items) {
+    return items.map(item => item.uuid ? item.uuid : item)
+  }
+
+  function getMinimalUpdateList(orders) {
+    return orders.map(order => {
+      return {
+        uuid : order.uuid,
+        price: order.price
+      }
+    })
+  }
+
   account.patchOrders = function (symbol, patch) {
     var payload = []
-    if (patch.cancels) {
-      patch.cancels.forEach(function (cancel) {
-        payload.push({ op: 'remove', path: '/' + cancel.uuid })
-      })
-    }
-    if (patch.updates && patch.updates.length > 0) {
-      payload.push({ op: 'replace', path: "", value: { orders: patch.updates } })
-    }
-    if (patch.creates && patch.creates.length > 0) {
-      payload.push({ op: 'add', path: "", value: patch.creates })
-    }
-    if (patch.merge && patch.merge.length > 0) {
-      payload.push({ op: 'merge', path: "", from: patch.merge })
-    }
-    if (patch.split) {
-      payload.push({ op: 'split', path: "", from: patch.split.uuid, quantity: patch.split.quantity })
-    }
+    try {
+      if (isPatchArray(patch.remove)) {
+        payload.push({ op: 'remove', value: getUuidList(patch.remove) })
+      }
+      if (isPatchArray(patch.replace)) {
+        payload.push({ op: 'replace', value: getMinimalUpdateList(patch.replace) })
+      }
+      if (isPatchArray(patch.add)) {
+        payload.push({ op: 'add', value: patch.add })
+      }
+      if (isPatchArray(patch.merge)) {
+        payload.push({ op: 'merge', value: getUuidList(patch.merge) })
+      }
+      if (isPatchArray(patch.split)) {
+        payload.push({ op: 'split', path: "", from: patch.split.from, value: patch.split.value })
+      }
 
-    if (payload.length === 0) return emptyPromise()
-    return promised(symbol, payload, "PATCH", "/order", function () {
+      if (payload.length === 0) return emptyPromise()
       logPatch(payload)
-      if (patch.creates) validator.validateCreateOrder(account.instruments, patch.creates)
-      if (patch.updates) validator.validateUpdateOrder(account.instruments, patch.updates, account.openOrders)
-    })
+      if (isPatchArray(patch.add)) validator.validateCreateOrder(account.instruments, patch.add)
+      if (isPatchArray(patch.replace)) validator.validateUpdateOrder(account.instruments, patch.replace, account.openOrders)
+    } catch (e) {
+      return promiseError(e)
+    }
+    return promised(symbol, payload, "PATCH", "/order")
+  }
+
+  function isPatchArray(op) {
+    return op && Array.isArray(op) && op.length > 0
   }
 
   account.createOrders = function (symbol, orders) {
-    return promised(symbol, orders, "POST", "/order", function () {
+    try {
       logOrders(orders)
       validator.validateCreateOrder(account.instruments, orders)
       account.assertAvailableMargin(orders)
-    })
+    } catch (e) {
+      return promiseError(e)
+    }
+    return promised(symbol, orders, "POST", "/order")
   }
 
   account.updateOrders = function (symbol, orders) {
-    return promised(symbol, { orders: orders }, "PUT", "/order", function () {
+    try {
       logOrders(orders)
       validator.validateUpdateOrder(account.instruments, orders, account.openOrders)
       account.assertAvailableMargin(orders)
-    })
+    } catch (e) {
+      return promiseError(e)
+    }
+    return promised(symbol, { orders: orders }, "PUT", "/order")
   }
 
   account.cancelOrder = function (symbol, order) {
@@ -111,8 +135,8 @@ module.exports = function (loginless, configs) {
     return promised(symbol, [], "DELETE", "/order")
   }
 
-  account.getClosedOrders = function (symbol, uuid) {  //todo: needs rest call
-    return loginless.rest.get("/contract/" + symbol + "/order/closed/" + (uuid ? uuid : ""))
+  account.getClosedOrders = function (symbol, uuid) {
+    return loginless.rest.get("/contract/" + symbol + "/order/closed" + (uuid ? "?from=" + uuid : ""))
   }
 
   account.transferToMargin = function (amountInSatoshi, feeInclusive) {
@@ -338,17 +362,9 @@ module.exports = function (loginless, configs) {
 
   }
 
-  function promised(symbol, body, method, uri, preProcess) {
+  function promised(symbol, body, method, uri) {
     var requestid = nodeUUID.v4()
     return new bluebird(function (resolve, reject) {
-      if (preProcess) {
-        try {
-          preProcess()
-        } catch (e) {
-          reject(e)
-          return
-        }
-      }
       try {
         promises[requestid] = { resolve: resolve, reject: reject, time: Date.now() }
         loginless.socket.send({ method: method, uri: uri, headers: { requestid: requestid }, body: body, params: { instrument: symbol } })
@@ -544,6 +560,12 @@ module.exports = function (loginless, configs) {
   function emptyPromise() {
     return new bluebird(function (resolve, reject) {
       return resolve()
+    })
+  }
+
+  function promiseError(e) {
+    return new bluebird(function (resolve, reject) {
+      return reject(e)
     })
   }
 
