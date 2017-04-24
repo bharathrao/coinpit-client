@@ -1,6 +1,6 @@
 var bluebird    = require('bluebird')
 var nodeUUID    = require('uuid')
-var assert      = require('affirm.js')
+var affirm      = require('affirm.js')
 var _           = require('lodash')
 var mangler     = require('mangler')
 var util        = require('util')
@@ -53,53 +53,41 @@ module.exports = function (loginless, configs) {
     }
   }
 
-  function getUuidList(items) {
-    return items.map(item => item.uuid ? item.uuid : item)
+  var PATCH_OPS     = {}
+  PATCH_OPS.add     = function (patch) {
+    affirm(patch.value && Array.isArray(patch.value), 'value must be a list of orders')
+  }
+  PATCH_OPS.remove  = function (patch) {
+    affirm(patch.value && Array.isArray(patch.value), 'value must be a list of orders uuids to be cancelled')
+  }
+  PATCH_OPS.replace = function (patch) {
+    affirm(patch.value && Array.isArray(patch.value), 'value must be a list of orders')
+  }
+  PATCH_OPS.merge   = function (patch) {
+    affirm(patch.value && Array.isArray(patch.value), 'value must be a list of orders uuids to be merged')
+  }
+  PATCH_OPS.split   = function (patch) {
+    // affirm(patch.value && Array.isArray(patch.value), 'value must be a uuid to be split')
   }
 
-  function getMinimalUpdateList(orders) {
-    return orders.map(order => {
-      return {
-        uuid : order.uuid,
-        price: order.price
-      }
-    })
-  }
-
-  account.patchOrders = function (symbol, patch) {
-    var payload = []
+  account.patchOrders = function (patch) {
     try {
-      if (isPatchArray(patch.remove)) {
-        payload.push({ op: 'remove', value: getUuidList(patch.remove) })
+      affirm(patch && Array.isArray(patch), 'patch must be an array')
+      if (patch.length === 0) return emptyPromise()
+      for (var i = 0; i < patch.length; i++) {
+        var each       = patch[i];
+        var opValidate = PATCH_OPS[each.op]
+        affirm(opValidate, 'Invalid operation')
+        opValidate(each)
       }
-      if (isPatchArray(patch.replace)) {
-        payload.push({ op: 'replace', value: getMinimalUpdateList(patch.replace) })
-      }
-      if (isPatchArray(patch.add)) {
-        payload.push({ op: 'add', value: patch.add })
-      }
-      if (isPatchArray(patch.merge)) {
-        payload.push({ op: 'merge', value: getUuidList(patch.merge) })
-      }
-      if (isPatchArray(patch.split)) {
-        payload.push({ op: 'split', path: "", from: patch.split.from, value: patch.split.value })
-      }
-
-      if (payload.length === 0) return emptyPromise()
-      logPatch(payload)
-      if (isPatchArray(patch.add)) validator.validateCreateOrder(account.instruments, patch.add)
-      if (isPatchArray(patch.replace)) validator.validateUpdateOrder(account.instruments, patch.replace, account.openOrders)
+      logPatch(patch)
     } catch (e) {
       return promiseError(e)
     }
-    return promised(symbol, payload, "PATCH", "/order")
+    return promised(patch, "PATCH", "/order")
   }
 
-  function isPatchArray(op) {
-    return op && Array.isArray(op) && op.length > 0
-  }
-
-  account.createOrders = function (symbol, orders) {
+  account.createOrders = function (orders) {
     try {
       logOrders(orders)
       validator.validateCreateOrder(account.instruments, orders)
@@ -107,32 +95,28 @@ module.exports = function (loginless, configs) {
     } catch (e) {
       return promiseError(e)
     }
-    return promised(symbol, orders, "POST", "/order")
+    return promised(orders, "POST", "/order")
   }
 
-  account.updateOrders = function (symbol, orders) {
+  account.updateOrders = function (orders) {
     try {
       logOrders(orders)
-      validator.validateUpdateOrder(account.instruments, orders, account.openOrders)
-      account.assertAvailableMargin(orders)
+      // validator.validateUpdateOrder(account.instruments, orders, account.openOrders)
+      // account.assertAvailableMargin(orders)
     } catch (e) {
       return promiseError(e)
     }
-    return promised(symbol, { orders: orders }, "PUT", "/order")
+    return promised({ orders: orders }, "PUT", "/order")
   }
 
-  account.cancelOrder = function (symbol, order) {
-    return promised(symbol, [order.uuid], "DELETE", "/order")
+  account.cancelOrder = function (order) {
+    return promised([order.uuid], "DELETE", "/order")
   }
 
   account.cancelOrders = function (orders) {
     return bluebird.all(orders.map(function (order) {
       return account.cancelOrder(order)
     }))
-  }
-
-  account.closeAll = function (symbol) {
-    return promised(symbol, [], "DELETE", "/order")
   }
 
   account.getClosedOrders = function (symbol, uuid) {
@@ -197,7 +181,7 @@ module.exports = function (loginless, configs) {
   }
 
   account.fixedPrice = function (symbol, price) {
-    assert(price, 'Invalid Price:' + price)
+    affirm(price, 'Invalid Price:' + price)
     return price.toFixed(instrument(symbol).ticksize) - 0
   }
 
@@ -362,12 +346,12 @@ module.exports = function (loginless, configs) {
 
   }
 
-  function promised(symbol, body, method, uri) {
+  function promised(body, method, uri) {
     var requestid = nodeUUID.v4()
     return new bluebird(function (resolve, reject) {
       try {
         promises[requestid] = { resolve: resolve, reject: reject, time: Date.now() }
-        loginless.socket.send({ method: method, uri: uri, headers: { requestid: requestid }, body: body, params: { instrument: symbol } })
+        loginless.socket.send({ method: method, uri: uri, headers: { requestid: requestid }, body: body })
       } catch (e) {
         onError({ requestid: requestid, error: e })
       }
@@ -440,7 +424,7 @@ module.exports = function (loginless, configs) {
 
   account.assertAvailableMargin = function (orders) {
     var margin = account.getPostAvailableMargin(orders)
-    assert(margin >= 0, "Insufficient margin ", margin, ".add margin")
+    affirm(margin >= 0, "Insufficient margin ", margin, ".add margin")
   }
 
   account.getPostAvailableMargin = function (orders) {
