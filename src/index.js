@@ -3,6 +3,7 @@ var bluebird = require('bluebird')
 var util     = require('util')
 var affirm   = require('affirm.js')
 var InsightUtil = require('insight-util')
+var bitcoinutil = require('bitcoinutil')
 
 module.exports = (function () {
   var client = {}
@@ -10,11 +11,12 @@ module.exports = (function () {
   client.getAccount = function (privKey, coinpitUrl) {
     affirm(privKey, 'private key required to create account')
     coinpitUrl = coinpitUrl || inferUrlFromPrivateKey(privKey)
-
     affirm(coinpitUrl, 'coinpit base url required to create account')
     var loginless = require("loginless")(coinpitUrl, "/api/v1")
-    return loginless.getServerKey(privKey)
+    var address = bitcoinutil.addressFromPrivateKey(privKey)
+    return loginless.getServerKey(address.publicKey)
       .then(function getConfigs(result) {
+        loginless.initPrivateKey(result.serverPublicKey, privKey)
         return loginless.rest.get('/all/config')
       })
       .then(function createAccount(configs) {

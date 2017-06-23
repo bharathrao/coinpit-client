@@ -1,6 +1,6 @@
 {
   "name": "coinpit-client",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "client library for coinpit",
   "main": "src/index.js",
   "scripts": {
@@ -33,7 +33,7 @@
     "coinpit-common": "0.1.1",
     "insight-util": "^1.2.0",
     "lodash": "^4.13.1",
-    "loginless": "^3.3.2",
+    "loginless": "^4.0.3",
     "mangler": "^1.0.1",
     "rest.js": "~0.2.1",
     "socket.io-client": "^1.4.6",
