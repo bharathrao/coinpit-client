@@ -1,6 +1,6 @@
 {
   "name": "coinpit-client",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "client library for coinpit",
   "main": "src/index.js",
   "scripts": {
@@ -28,12 +28,12 @@
   "dependencies": {
     "affirm.js": "^1.0.0",
     "bitcoinjs-lib": "2.1.4",
-    "bitcoinutil": "^3.0.0",
+    "bitcoinutil": "^3.0.2",
     "bluebird": "^3.4.0",
     "coinpit-common": "0.1.1",
-    "insight-util": "^1.2.0",
+    "insight-util": "^1.4.1",
     "lodash": "^4.13.1",
-    "loginless": "^4.0.3",
+    "loginless": "^4.0.4",
     "mangler": "^1.0.1",
     "rest.js": "~0.2.1",
     "socket.io-client": "^1.4.6",
